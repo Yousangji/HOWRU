@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">HowRU</string>
+    <string name="app_name">howru</string>
+    <string name="text_error_message_blank">입력이 필요합니다(Cannot be Blank)</string>
+
 </resources>

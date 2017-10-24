@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.yousangji.howru.Controller.roomapi;
 import com.example.yousangji.howru.Model.obj_room;
 import com.example.yousangji.howru.R;
 import com.github.faucamp.simplertmp.RtmpHandler;
@@ -32,6 +33,10 @@ import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpListener,
         SrsRecordHandler.SrsRecordListener, SrsEncodeHandler.SrsEncodeListener{
@@ -345,9 +350,9 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
 
         Log.d("mytag","[post streaminfo] userid: "+userid+"usernick: "+usernick+"rmtitle:"+rmtitle+"rmid: "+rmid);
-        /*
+
         //Stream list
-        Streamroom.getRetrofit(getApplicationContext()).post(rmid,rmtitle,userid,usernick).enqueue(new Callback<obj_room>() {
+        roomapi.getRetrofit(getApplicationContext()).post(rmid,rmtitle,userid,usernick).enqueue(new Callback<obj_room>() {
             @Override
             public void onResponse(Call<obj_room> call, Response<obj_room> response) {
                 Log.d("mytag","[post streaminginfo]response body"+response.body().toString());
@@ -358,7 +363,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
             public void onFailure(Call<obj_room> call, Throwable t) {
                 Log.d("mytag","[post streaminginfo]response failure");
             }
-        });*/
+        });
 
     }
 
@@ -374,8 +379,8 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     public void onRtmpStopped() {
         Toast.makeText(getApplicationContext(), "Stopped", Toast.LENGTH_SHORT).show();
 
-       /* //Stream list
-        Streamroom.getRetrofit(getApplicationContext()).update(rmid).enqueue(new Callback<obj_room>() {
+        //Stream list
+        roomapi.getRetrofit(getApplicationContext()).update(rmid).enqueue(new Callback<obj_room>() {
             @Override
             public void onResponse(Call<obj_room> call, Response<obj_room> response) {
                 Log.d("mytag","[update streaminginfo]response body"+response.body().toString());
@@ -386,7 +391,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
             public void onFailure(Call<obj_room> call, Throwable t) {
                 Log.d("mytag","[update streaminginfo]response failure");
             }
-        });*/
+        });
     }
 
     @Override

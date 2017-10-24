@@ -19,13 +19,23 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".View.broadcaster">
+        <activity android:name=".View.main_container"
+                  android:configChanges="orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name=".View.viewer"
+                  android:configChanges="orientation|screenSize"
+                  android:windowSoftInputMode="adjustPan"/>
+        <activity android:name=".View.broadcaster"
+                  android:configChanges="orientation|screenSize"/>
+        <activity android:name=".View.sign_up"/>
+        <activity android:name=".View.sign_in_email"/>
+        <activity android:name=".View.sign_in_sns"/>
+
     </application>
 
 </manifest>
