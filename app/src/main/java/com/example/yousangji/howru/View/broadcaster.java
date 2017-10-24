@@ -1,4 +1,4 @@
-package com.example.yousangji.howru;
+package com.example.yousangji.howru.View;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,7 +18,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.yousangji.howru.Model.obj_room;
-import com.example.yousangji.howru.View.viewer;
+import com.example.yousangji.howru.R;
 import com.github.faucamp.simplertmp.RtmpHandler;
 import com.seu.magicfilter.utils.MagicFilterType;
 
