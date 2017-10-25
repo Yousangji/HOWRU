@@ -25,10 +25,9 @@ public class api_sign extends obj_retrofit {
     public interface signapi {
         /**
          * 회원가입 메소드
+         * @param userid
          * @param emailaddr
-         * @param usrname
-         * @param usrpassword
-         * @param usrsex
+         * @param username
 
          * @return
          */
@@ -36,10 +35,9 @@ public class api_sign extends obj_retrofit {
         @POST(api_url.POST_STREAM)
         Call<obj_user> post_signup(
 
+                @Field("userid") String userid,
                 @Field("emailaddr") String emailaddr,
-                @Field("usrname") String usrname,
-                @Field("usrpassword") String usrpassword,
-                @Field("usrsex") String usrsex
+                @Field("username") String username
 
         );
 
@@ -47,7 +45,7 @@ public class api_sign extends obj_retrofit {
          * 로그인-email
          *
          * @param emailaddr
-         * @param usrpassword
+         * @param password
 
          * @return
          */
@@ -55,7 +53,7 @@ public class api_sign extends obj_retrofit {
         @POST(api_url.GET_STREAM_LIST)
         Call<obj_user> post_signin(
                 @Field("emailaddr") String emailaddr,
-                @Field("usrpassword") String usrpassword
+                @Field("usrpassword") String password
 
         );
 

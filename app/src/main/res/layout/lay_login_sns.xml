@@ -59,6 +59,7 @@
             android:layout_width="210dp"
             android:layout_height="36dp"
             android:src="@drawable/login_facebook"
+            android:onClick="onclicklistenerfaceb"
             />
 
         <ImageView
