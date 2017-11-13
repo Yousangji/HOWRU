@@ -3,4 +3,7 @@
     <string name="text_error_message_blank">입력이 필요합니다(Cannot be Blank)</string>
     <string name="facebook_app_id">1962819447328970</string>
     <string name="fb_login_protocol_scheme">fb1962819447328970</string>
+    <string name="objnone">생성된 방이 없습니다.</string>
+    <string name="notinone">표시할 알림이 없습니다.</string>
+    <string name="networkerror">네트워크에 오류, 다시 실행해주세요.</string>
 </resources>

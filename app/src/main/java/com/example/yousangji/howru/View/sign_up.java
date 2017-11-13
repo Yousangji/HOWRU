@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.example.yousangji.howru.Controller.api_sign;
 import com.example.yousangji.howru.Model.obj_user;
 import com.example.yousangji.howru.R;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.regex.Pattern;
 
@@ -97,7 +98,8 @@ public class sign_up extends AppCompatActivity{
 
     //http sign_up 통신
     public void retro_signup(){
-        api_sign.getRetrofit(getApplicationContext()).post_signup(emailadress,username,password,"0").enqueue(new Callback<obj_user>() {
+        String t= FirebaseInstanceId.getInstance().getToken();
+        api_sign.getRetrofit(getApplicationContext()).post_signup(emailadress,emailadress,username,t).enqueue(new Callback<obj_user>() {
             @Override
             public void onResponse(Call<obj_user> call, Response<obj_user> response) {
                 Log.d("mytag","[Http signup] "+response.message());

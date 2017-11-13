@@ -7,13 +7,14 @@ package com.example.yousangji.howru.Model;
 public class obj_room {
 
     private int no;
-    private String streamernick;
+    private String nickname;
     private String rmtitle;
     private String rmthumburl;
     private int count;
     private String rmid;
     private String rmpath;
     private String streamerid;
+    private String profileurl;
     private int onair;
 
     public  obj_room(){
@@ -25,7 +26,7 @@ public class obj_room {
     }
 
     public void setNickname(String nickname) {
-        this.streamernick = nickname;
+        this.nickname = nickname;
     }
 
     public void setThumnailurl(String thumnailurl) {
@@ -52,15 +53,17 @@ public class obj_room {
         this.onair = onair;
     }
 
+    public void setProfileurl(String profileurl) {
+        this.profileurl = profileurl;
+    }
 
     public int getCount() {
         return count;
     }
 
     public String getNickname() {
-        return streamernick;
+        return nickname;
     }
-
     public String getThumnailurl() {
         return rmthumburl;
     }
@@ -83,6 +86,10 @@ public class obj_room {
 
     public int getOnair() {
         return onair;
+    }
+
+    public String getProfileurl() {
+        return profileurl;
     }
 
 }

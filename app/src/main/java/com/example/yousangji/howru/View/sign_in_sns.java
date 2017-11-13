@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.example.yousangji.howru.Controller.api_sign;
 import com.example.yousangji.howru.Model.obj_user;
@@ -30,6 +31,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.gson.Gson;
 
 import org.json.JSONException;
@@ -55,7 +57,7 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
 
     // get String userinfo
     String username;
-    String userid;
+    String userid=null;
 
 
     //ImageView
@@ -63,6 +65,7 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
     ImageView btn_login_faceb;
     ImageView btn_login_google;
     ImageView btn_login_kakao;
+    Button btn_logout;
     //dialog_email
     Dialog d;
 
@@ -83,6 +86,20 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
         btn_login_email=(ImageView)findViewById(R.id.btn_login_email);
         btn_login_faceb=(ImageView)findViewById(R.id.btn_login_facebook);
         btn_login_google=(ImageView)findViewById(R.id.btn_login_google);
+        btn_logout=(Button)findViewById(R.id.btn_logout);
+
+        //TODO:로그인 상태 확인, fcm 정보 전달
+        //shared
+        util_sharedpref.createInstance(getApplicationContext());
+        prefutil=util_sharedpref.getInstance();
+        userid=prefutil.getString("userid",null);
+        Log.d("mytag","[list_follow] userid : "+userid);
+
+        /*//TODO:자동로그인
+        if(userid!=null){
+            Intent autologin =new Intent(sign_in_sns.this,main_container.class);
+            startActivity(autologin);
+        }*/
 
         //1. email 로그인/회원가입
         btn_login_email.setOnClickListener(new View.OnClickListener() {
@@ -123,6 +140,7 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
 
         //TODO:2.SNS 로그인
 
+
         // Configure sign-in to request the user's ID, email address, and basic
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -145,7 +163,12 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
             }
         });
 
-
+        btn_logout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LoginManager.getInstance().logOut();
+            }
+        });
 
     }
 
@@ -153,6 +176,7 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        Log.d("mytag","[sns_login]"+requestCode);
         if (requestCode == rc_signin_google) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             //handle google login result
@@ -162,15 +186,18 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
                 // Signed in successfully, show authenticated UI.
                 GoogleSignInAccount acct = result.getSignInAccount();
                 emailadress=acct.getEmail();
-                username=acct.getGivenName();
+                username=acct.getDisplayName();
                 userid=acct.getId();
 
-                retro_signup(emailadress,username,userid);
+                Log.d("mytag","[sign_in_sns]email,username,userid"+emailadress+username+userid);
+
+                retro_signup(userid,emailadress,username);
             }else{
                 // Google sign failed
             }
 
         }else{
+            cbmng_login_faceb.onActivityResult(requestCode, resultCode, data);
 
         }
 
@@ -179,10 +206,12 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
     }
 
     public void onclicklistenerfaceb(View v){
+
+        //facebook initialize
         FacebookSdk.sdkInitialize(getApplicationContext());
         cbmng_login_faceb= CallbackManager.Factory.create();
 
-        LoginManager.getInstance().logInWithReadPermissions(sign_in_sns.this, Arrays.asList("prifile","email"));
+        LoginManager.getInstance().logInWithReadPermissions(sign_in_sns.this, Arrays.asList("public_profile","email"));
         LoginManager.getInstance().registerCallback(cbmng_login_faceb, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(final LoginResult loginResult) {
@@ -191,13 +220,13 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
                     @Override
                     public void onCompleted(JSONObject user, GraphResponse response) {
                         if (response.getError() != null) {
-
+                            Log.e("mytag",response.getError().toString());
                         } else {
                             Log.i("TAG", "user: " + user.toString());
                             Log.i("TAG", "AccessToken: " + loginResult.getAccessToken().getToken());
                             setResult(RESULT_OK);
                             try {
-                                userid = loginResult.getAccessToken().getUserId();
+                                userid = user.getString("id");
                                 emailadress = user.getString("email");
                                 username = user.getString("name");
                             }catch (JSONException e){
@@ -232,29 +261,43 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
     }
 
     public void retro_signup(String i,String e,String n){
-        api_sign.getRetrofit(getApplicationContext()).post_signup(i,e,n).enqueue(new Callback<obj_user>() {
+        String t= FirebaseInstanceId.getInstance().getToken();
+        Log.d("mytag","[sign_in_sns]fcmtoken"+t);
+        api_sign.getRetrofit(getApplicationContext()).post_signup(i,e,n,t).enqueue(new Callback<obj_user>() {
             @Override
             public void onResponse(Call<obj_user> call, Response<obj_user> response) {
                 Log.d("mytag","[Http signup] "+response.message());
-
-                //TODO:2.2.1. userobj 생성
-                obj_user userobj=response.body();
-                Gson gson=new Gson();
-                gson.toJson(userobj);
-                String userobj_str=gson.toString();
-
-                Log.d("mytag",tag+"[Gson obj to json]"+userobj_str);
-
-                //TODO:2.2.2.sharedpreference 할당
-                prefutil.createInstance(getApplicationContext());
-                prefutil.getInstance();
-                prefutil.putString("userinfo",userobj_str);
-                Log.d("mytag",tag+"[put sharedpreference]"+userobj_str);
+                if(response.isSuccessful()) {
+                    //TODO:2.2.1. userobj 생성
+                    obj_user userobj = response.body();
+                    Gson gson = new Gson();
+                    String userobj_str = gson.toJson(userobj);
 
 
-                Intent i = new Intent(sign_in_sns.this, main_container.class);
-                startActivity(i);
-                finish();
+                    Log.d("mytag", tag + "[Gson obj to json]" + userobj_str);
+
+                    //TODO:2.2.2.sharedpreference 할당
+
+                    util_sharedpref.createInstance(getApplicationContext());
+                    prefutil=util_sharedpref.getInstance();
+                    prefutil.putString("userinfo", userobj_str);
+                    prefutil.putString("userid",userobj.getUserid());
+                    prefutil.putString("followee",userobj.getFollowee());
+                    prefutil.putString("username",userobj.getUsername());
+                    prefutil.putString("nickname",userobj.getNickname());
+                    prefutil.putString("profileurl",userobj.getProfileurl());
+                    prefutil.putString("usermsg",userobj.getUsermsg());
+                    Log.d("mytag", tag + "[put sharedpreference]" + userobj_str);
+
+                    Toast.makeText(sign_in_sns.this, "로그인되었습니다", Toast.LENGTH_SHORT).show();
+                    Intent i = new Intent(sign_in_sns.this, main_container.class);
+                    startActivity(i);
+                    finish();
+                }else{
+                    Log.d("mytag","[retrofit response]"+response.toString());
+                    Log.d("mytag","[retrofit response body]"+response.body());
+                    Log.d("mytag","[retrofit response message]"+response.message());
+                }
             }
 
             @Override

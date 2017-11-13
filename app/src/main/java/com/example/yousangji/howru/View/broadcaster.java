@@ -1,6 +1,5 @@
 package com.example.yousangji.howru.View;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -15,11 +14,15 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.example.yousangji.howru.Controller.api_follow;
 import com.example.yousangji.howru.Controller.roomapi;
 import com.example.yousangji.howru.Model.obj_room;
+import com.example.yousangji.howru.Model.obj_serverresponse;
 import com.example.yousangji.howru.R;
+import com.example.yousangji.howru.Util.util_sharedpref;
 import com.github.faucamp.simplertmp.RtmpHandler;
 import com.seu.magicfilter.utils.MagicFilterType;
 
@@ -27,6 +30,9 @@ import net.ossrs.yasea.SrsCameraView;
 import net.ossrs.yasea.SrsEncodeHandler;
 import net.ossrs.yasea.SrsPublisher;
 import net.ossrs.yasea.SrsRecordHandler;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -44,10 +50,10 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     private static final String TAG = "Yasea";
 
     private Button btnPublish;
-    private Button btnSwitchCamera;
-    private Button btnRecord;
-    private Button btnSwitchEncoder;
-    private Button btntoplayer;
+    private ImageView btnSwitchCamera;
+    private ImageView btnRecord;
+    private ImageView btnSwitchEncoder;
+
 
 
     private SharedPreferences sp;
@@ -61,6 +67,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     private obj_room rmobj;
 
     //userinfo
+    private util_sharedpref prefutil;
     private String userid;
     private String usernick;
     private String rmtitle;
@@ -71,6 +78,17 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         super.onCreate(savedInstanceState);
         //roomobj 생성
         rmobj=new obj_room();
+
+        util_sharedpref.createInstance(getApplicationContext());
+        prefutil=util_sharedpref.getInstance();
+        String userinfostr=prefutil.getString("userinfo");
+        try {
+            JSONObject userobj = new JSONObject(userinfostr);
+            userid = userobj.getString("userid");
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+        Log.d("mytag","[braodcaster] userid : "+userid);
 
 
 
@@ -84,20 +102,15 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         sp = getSharedPreferences("Yasea", MODE_PRIVATE);
         rtmpUrl = sp.getString("rtmpUrl", rtmpUrl);
 
-        // initialize url.
-        final EditText efu = (EditText) findViewById(R.id.url);
-        efu.setText(rtmpUrl);
 
         //edittext init
-        final EditText edituserid=(EditText)findViewById(R.id.userid);
         final EditText edittitle=(EditText)findViewById(R.id.title);
-
         btnPublish = (Button) findViewById(R.id.publish);
-        btnSwitchCamera = (Button) findViewById(R.id.swCam);
-        btnRecord = (Button) findViewById(R.id.record);
-        btnSwitchEncoder = (Button) findViewById(R.id.swEnc);
+        btnSwitchCamera = (ImageView) findViewById(R.id.swCam);
+        btnRecord = (ImageView) findViewById(R.id.record);
+        btnSwitchEncoder = (ImageView) findViewById(R.id.swEnc);
 
-        btntoplayer=(Button)findViewById(R.id.toplayer);
+
 
         mPublisher = new SrsPublisher((SrsCameraView) findViewById(R.id.glsurfaceview_camera));
         mPublisher.setEncodeHandler(new SrsEncodeHandler(this));
@@ -111,17 +124,17 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         btnPublish.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (btnPublish.getText().toString().contentEquals("publish")) {
+                if (btnPublish.getText().toString().contentEquals("방송하기")) {
 
-                    userid=edituserid.getText().toString();
-                    usernick=edituserid.getText().toString();
+                    //TODO: GET userobj info from sharedpref
+                    //userid=edituserid.getText().toString();
+                    usernick=userid;
                     rmtitle=edittitle.getText().toString();
                     SimpleDateFormat s = new SimpleDateFormat("yyMMddhhmmss");
                     rmid = s.format(new Date())+userid;
 
 
                     Log.d("mytag","publish rmid : "+rmid);
-                    rtmpUrl = efu.getText().toString();
                     rtmpUrl="rtmp://52.78.169.32:1935/show/"+rmid;
                     SharedPreferences.Editor editor = sp.edit();
                     editor.putString("rtmpUrl", rtmpUrl);
@@ -130,18 +143,19 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
                     mPublisher.startPublish(rtmpUrl);
                     mPublisher.startCamera();
 
+                    /*
                     if (btnSwitchEncoder.getText().toString().contentEquals("soft encoder")) {
                         Toast.makeText(getApplicationContext(), "Use hard encoder", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(getApplicationContext(), "Use soft encoder", Toast.LENGTH_SHORT).show();
-                    }
+                    }*/
                     btnPublish.setText("stop");
                     btnSwitchEncoder.setEnabled(false);
                 } else if (btnPublish.getText().toString().contentEquals("stop")) {
                     mPublisher.stopPublish();
                     mPublisher.stopRecord();
-                    btnPublish.setText("publish");
-                    btnRecord.setText("record");
+                    btnPublish.setText("방송하기");
+                    //btnRecord.setText("record");
                     btnSwitchEncoder.setEnabled(true);
                 }
             }
@@ -157,7 +171,8 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         btnRecord.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (btnRecord.getText().toString().contentEquals("record")) {
+               /*
+                if (btnRecord.getImageAlpha()==80) {
                     if (mPublisher.startRecord(recPath)) {
                         btnRecord.setText("pause");
                     }
@@ -168,28 +183,41 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
                     mPublisher.resumeRecord();
                     btnRecord.setText("pause");
                 }
+                btnRecord.setImageAlpha(0);*/
             }
         });
 
         btnSwitchEncoder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /*
                 if (btnSwitchEncoder.getText().toString().contentEquals("soft encoder")) {
                     mPublisher.switchToSoftEncoder();
                     btnSwitchEncoder.setText("hard encoder");
                 } else if (btnSwitchEncoder.getText().toString().contentEquals("hard encoder")) {
                     mPublisher.switchToHardEncoder();
                     btnSwitchEncoder.setText("soft encoder");
-                }
+                }*/
             }
         });
 
-        btntoplayer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent toplayerint=new Intent(broadcaster.this, viewer.class);
-                startActivity(toplayerint);
 
+    }
+
+    public void retro_putnoti(){
+        api_follow.getRetrofit(getApplicationContext()).send(userid, usernick + "님이 " + "방송을 시작했습니다.").enqueue(new Callback<obj_serverresponse>() {
+            @Override
+            public void onResponse(Call<obj_serverresponse> call, Response<obj_serverresponse> response) {
+
+                obj_serverresponse serverresobj = response.body();
+                if (serverresobj.getStatus().equals("OK")) {
+                    Toast.makeText(getApplicationContext(), serverresobj.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<obj_serverresponse> call, Throwable t) {
+                Log.d("mytag", "[adt_recy_follow]post follow error");
             }
         });
 
@@ -295,7 +323,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         super.onConfigurationChanged(newConfig);
         mPublisher.stopEncode();
         mPublisher.stopRecord();
-        btnRecord.setText("record");
+        //btnRecord.setText("record");
         mPublisher.setScreenOrientation(newConfig.orientation);
         if (btnPublish.getText().toString().contentEquals("stop")) {
             mPublisher.startEncode();
@@ -331,7 +359,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
             mPublisher.stopPublish();
             mPublisher.stopRecord();
             btnPublish.setText("publish");
-            btnRecord.setText("record");
+           // btnRecord.setText("record");
             btnSwitchEncoder.setEnabled(true);
         } catch (Exception e1) {
             //
@@ -364,6 +392,8 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
                 Log.d("mytag","[post streaminginfo]response failure");
             }
         });
+
+        retro_putnoti();
 
     }
 

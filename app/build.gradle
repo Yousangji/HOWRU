@@ -4,8 +4,7 @@ android {
     compileSdkVersion 26
     buildToolsVersion "26.0.2"
 
-    targetCompatibility = '1.7'
-    sourceCompatibility = '1.7'
+
 
     defaultConfig {
         applicationId "com.example.yousangji.howru"
@@ -15,17 +14,11 @@ android {
         versionName "1.0"
         //testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+
         jackOptions {
             enabled true
         }
-        ndk {
-            abiFilters "armeabi-v7a", "x86"
-        }
-        externalNativeBuild {
-            cmake {
-                cppFlags ""
-            }
-        }
+
     }
     buildTypes {
         release {
@@ -33,25 +26,21 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    externalNativeBuild {
-        cmake {
-            path "CMakeLists.txt"
-        }
+
+    compileOptions{
+        incremental true
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
-    }
-    dexOptions {
-    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    /*
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
                     exclude group: 'com.android.support', module: 'support-annotations'
-                })
+                })*/
     compile 'com.android.support:appcompat-v7:26.1.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
@@ -66,7 +55,13 @@ dependencies {
     compile 'com.squareup:otto:1.3.8'
     compile 'com.roughike:bottom-bar:2.3.1'
     compile 'com.github.bumptech.glide:glide:3.7.0'
+    compile 'jp.wasabeef:glide-transformations:2.0.1'
     compile files('libs/netty-all-4.1.16.Final.jar')
     compile 'com.facebook.android:facebook-login:[4,5)'
-    compile 'com.google.android.gms:play-services-auth:9.8.0'
+    compile 'com.google.android.gms:play-services-auth:11.0.4'
+    compile 'com.github.danylovolokh:video-player-manager:0.2.0'
+    compile 'com.github.danylovolokh:list-visibility-utils:0.2.0'
+    compile 'com.google.firebase:firebase-core:11.0.4'
+    compile 'com.google.firebase:firebase-messaging:11.0.4'
 }
+apply plugin: 'com.google.gms.google-services'

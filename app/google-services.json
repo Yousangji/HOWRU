@@ -1,0 +1,59 @@
+{
+  "project_info": {
+    "project_number": "892603572316",
+    "firebase_url": "https://fir-howru.firebaseio.com",
+    "project_id": "firebase-howru",
+    "storage_bucket": "firebase-howru.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:892603572316:android:274212bab2ab3407",
+        "android_client_info": {
+          "package_name": "com.example.yousangji.howru"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "892603572316-bdrmns98fai0tidh5ootsabspl091da0.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "892603572316-uapv42rhrjggqh4nkak774e1vqcktj1r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.yousangji.howru",
+            "certificate_hash": "2fac5251014d1c7c7605852b89c712ccdeddaa0a"
+          }
+        },
+        {
+          "client_id": "892603572316-klsquokn64ohk9n79s6828qu4f21uc0i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDv985qUv1HFs9v3ufrYKmDOkKXiOUXVOg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "892603572316-bdrmns98fai0tidh5ootsabspl091da0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

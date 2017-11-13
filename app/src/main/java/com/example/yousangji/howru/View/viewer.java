@@ -23,6 +23,7 @@ import com.example.yousangji.howru.Model.obj_chatmsg;
 import com.example.yousangji.howru.Model.obj_room;
 import com.example.yousangji.howru.Model.thr_nettycli;
 import com.example.yousangji.howru.R;
+import com.example.yousangji.howru.Util.util_sharedpref;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -88,13 +89,15 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
     //test
     private boolean flag=true;
     //userinfo
+    private String userid;
+    private String url_profile;
     private String nickname;
     private String rmnum;
     private String roomid;
     private String rminfo;
     private String url;
     private obj_room rmobj;
-
+    private util_sharedpref prefutil;
 
 
 
@@ -136,7 +139,12 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
         rmobj=gson.fromJson(rminfo,obj_room.class);
         url=rmobj.getRmpath();
 
+        //shared
+        util_sharedpref.createInstance(getApplicationContext());
+        prefutil=util_sharedpref.getInstance();
+        userid=prefutil.getString("userid");
 
+        Log.d("mytag","[list_follow] userid : "+userid);
 
 
         resolutionTextView = new TextView(this);
@@ -230,7 +238,7 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
 
 
 //VIDEO FROM SD CARD: (2 steps. set up file and path, then change videoSource to get the file)
-//        String urimp4 = "path/FileName.mp4"; //upload file to device and add path/name.mp4
+     //   String urimp4 = "path/FileName.mp4"; //upload file to device and add path/name.mp4
 //        Uri mp4VideoUri = Uri.parse(Environment.getExternalStorageDirectory().getAbsolutePath()+urimp4);
 
 

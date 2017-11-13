@@ -1,0 +1,59 @@
+{
+  "project_info": {
+    "project_number": "463434689234",
+    "firebase_url": "https://fir-bultalk.firebaseio.com",
+    "project_id": "firebase-bultalk",
+    "storage_bucket": "firebase-bultalk.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:463434689234:android:2695afb6f9bff137",
+        "android_client_info": {
+          "package_name": "com.example.yousangji.test3"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "463434689234-tegcgi235e29ksm7kbb3eqv2m62dfiub.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "463434689234-bdrlrjtprpcrtqlpiqhtifll1a20lonc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.yousangji.test3",
+            "certificate_hash": "2fac5251014d1c7c7605852b89c712ccdeddaa0a"
+          }
+        },
+        {
+          "client_id": "463434689234-lucnaljribck9cs4aalc523d4boss3ud.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUCGG9fuu1d-262WI715g35ZSj32YTzzA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "463434689234-tegcgi235e29ksm7kbb3eqv2m62dfiub.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

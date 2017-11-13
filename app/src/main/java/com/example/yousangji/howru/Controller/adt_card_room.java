@@ -3,6 +3,7 @@ package com.example.yousangji.howru.Controller;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -77,6 +78,8 @@ public class adt_card_room extends RecyclerView.Adapter<adt_card_room.cardviewho
                 .placeholder(R.drawable.back)
                 .error(R.drawable.back)
                 .into(holder.thumbnail);
+
+        Log.d("mytag","adt_card_room: imageurl"+api_url.API_BASE_URL+rmobj.getThumnailurl());
 
         if(rmobj.getOnair()==0){
             holder.onair.setVisibility(View.VISIBLE);

@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1.4"
-        android:text="Stream"
+        android:text="HowRU"
         android:textStyle="bold"
         android:textColor="#000000"
         android:textSize="48sp"
@@ -78,5 +78,11 @@
             android:layout_marginTop="20dp"
             android:src="@drawable/login_signup"
             />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:text="logout"
+            android:id="@+id/btn_logout"/>
     </LinearLayout>
 </LinearLayout>

@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.yousangji.howru.Model.obj_chatmsg;
@@ -62,6 +63,7 @@ public class adt_recy_chat  extends RecyclerView.Adapter<RecyclerView.ViewHolder
         ((VH_chatmsg)holder).msg_nickname.setText(list_chatmsg.get(position).getMsg_nickname());
         ((VH_chatmsg)holder).msg_content.setText(list_chatmsg.get(position).getMsg_content());
 
+
         if(list_chatmsg.get(position).getFlag()==1){
             ((VH_chatmsg)holder).msg_nickname.setTextColor(Color.rgb(0,0,200));
             ((VH_chatmsg)holder).msg_content.setTextColor(Color.rgb(0,0,200));
@@ -71,11 +73,13 @@ public class adt_recy_chat  extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public class VH_chatmsg extends RecyclerView.ViewHolder{
         TextView msg_nickname;
         TextView msg_content;
+        ImageView img_profile;
 
         public  VH_chatmsg(View view){
             super(view);
             msg_nickname=(TextView)view.findViewById(R.id.msg_nickname);
             msg_content=(TextView)view.findViewById(R.id.msg_content);
+            img_profile=(ImageView)view.findViewById(R.id.img_chat_profile);
         }
     }
 
