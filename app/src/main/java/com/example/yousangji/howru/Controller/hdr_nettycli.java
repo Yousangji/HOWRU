@@ -4,6 +4,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.example.yousangji.howru.Model.obj_chatmsg;
+
 import org.json.JSONObject;
 
 import io.netty.buffer.ByteBuf;
@@ -20,9 +22,11 @@ public class hdr_nettycli extends ChannelInboundHandlerAdapter {
     //private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(echoclienthandler.class);
     //private final ByteBuf firstMessage;
     private Handler m_handler;
+    private obj_chatmsg obj_msg;
 
     public hdr_nettycli(Handler handler){
         this.m_handler=handler;
+
         /*
         firstMessage  = Unpooled.buffer(echoclient.SIZE);
 

@@ -53,9 +53,6 @@ import com.google.android.exoplayer2.video.VideoRendererEventListener;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 /**
  * Created by YouSangJi on 2017-10-24.
  */
@@ -68,16 +65,18 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
     private TextView resolutionTextView;
 
     //chat
+    Gson gson;
     private RecyclerView chatmst_list;
     private RecyclerView.LayoutManager chat_layman;
     private adt_recy_chat chat_recyadapter;
     private ImageView btnchat_show;
     private EditText chat_edit;
     private ImageView btnchat_sbm;
+
     //private clientSocketchannel socketchannel_obj;
     private thr_nettycli client;
     private String m_msgcontent=null;
-    private JSONObject msgobjjson=null;
+    private String str_msgobj_send=null;
 
     //chatServer_info
     private String ipaddress="52.78.169.32";
@@ -85,6 +84,7 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
     private ProgressBar m_pdIsLoading;
 
     obj_chatmsg msgobj;
+    obj_chatmsg msgobj_received;
 
     //test
     private boolean flag=true;
@@ -111,14 +111,13 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
                 case 1: // 데이터 수신 완료
                     // 수신 데이터 토스트로 띄움.
                     Toast.makeText(viewer.this, "server responded : " + msg.obj, Toast.LENGTH_SHORT).show();
-                    try{
+
                         //Json으로 받은 데이터를 list에 추가
-                        msgobjjson=new JSONObject(msg.obj.toString());
-                        chat_recyadapter.addmsg_tolist(msgobjjson);
+                        Gson gson_recv=new Gson();
+                        msgobj_received=gson_recv.fromJson(msg.obj.toString(),obj_chatmsg.class);
+                        chat_recyadapter.addmsg(msgobj_received);
                         chat_recyadapter.notifyDataSetChanged();
-                    }catch (JSONException e){
-                        e.printStackTrace();
-                    }
+                    Log.d("mytag","[viewer]received msg : "+msg.obj.toString());
                     break;
             }
         }
@@ -135,9 +134,10 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
         Intent getroomid=getIntent();
         rminfo=getroomid.getStringExtra("rminfo");
         rmobj=new obj_room();
-        Gson gson=new GsonBuilder().create();
+         gson=new GsonBuilder().create();
         rmobj=gson.fromJson(rminfo,obj_room.class);
         url=rmobj.getRmpath();
+        roomid=rmobj.getRoomid();
 
         //shared
         util_sharedpref.createInstance(getApplicationContext());
@@ -171,35 +171,32 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
         Log.d("mytag", "client 생성");
 
         msgobj=new obj_chatmsg();
+        msgobj.setMsg_state("0");
+        msgobj.setMsg_nickname(nickname);
+        msgobj.setMsg_userid(userid);
+        msgobj.setMsg_profileurl(url_profile);
+        msgobj.setMsg_rmnum(roomid);
+        msgobj.setMsg_content(nickname+"님이 입장하셨습니다.");
+
+        str_msgobj_send=gson.toJson(msgobj);
+        client.sendMsg(str_msgobj_send);
+        Log.d("mytag","[viewer] sendsettingmsg" +str_msgobj_send);
+        chat_recyadapter.addmsg(msgobj);
+        chat_recyadapter.notifyDataSetChanged();
+
         rmnum=rmobj.getRoomid();
         btnchat_sbm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 m_msgcontent=chat_edit.getText().toString();
-
                 ////////////////temp : 방번호 nickname 입력 => 접속
-                if(flag==true) {
-                    nickname=m_msgcontent;
-                    msgobj.setMsg_nickname(nickname);
-                    msgobj.setMsg_state("0");
-                    msgobj.setMsg_rmnum(rmnum);
-                    flag=false;
-                }else {
-                    try {
-                        msgobj.setMsg_state("3");
-                        msgobj.setMsg_content(m_msgcontent);
-                        msgobj.setMsg_nickname(nickname);
-                        msgobj.setMsg_rmnum(rmnum);
-                        msgobj.setFlag(1);
-                        msgobjjson = new JSONObject(msgobj.toJSONstr());
-                        chat_recyadapter.addmsg_tolist(msgobjjson);
-                        chat_recyadapter.notifyDataSetChanged();
-                    }catch (JSONException e){
-                        e.printStackTrace();
-                    }
-                }
-
-                client.sendMsg(msgobj.toJSONstr());
+                msgobj.setMsg_state("3");
+                msgobj.setMsg_content(m_msgcontent);
+                chat_recyadapter.addmsg(msgobj);
+                chat_recyadapter.notifyDataSetChanged();
+                str_msgobj_send=gson.toJson(msgobj);
+                client.sendMsg(str_msgobj_send);
+                Log.d("mytag","[viewer] sendmsg" +str_msgobj_send);
                 chat_edit.setText("");
             }
         });

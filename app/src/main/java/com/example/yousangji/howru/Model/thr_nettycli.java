@@ -48,6 +48,7 @@ public class thr_nettycli extends Thread{
         this.port=8007;
         this.mhandler=handler;
 
+
     }
 
     public void run() {

@@ -6,24 +6,35 @@ import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.example.yousangji.howru.Controller.adt_recy_chat;
+import com.example.yousangji.howru.Controller.adt_recy_filter;
 import com.example.yousangji.howru.Controller.api_follow;
+import com.example.yousangji.howru.Controller.callback_filter;
 import com.example.yousangji.howru.Controller.roomapi;
+import com.example.yousangji.howru.Model.obj_chatmsg;
+import com.example.yousangji.howru.Model.obj_filter_thumb;
 import com.example.yousangji.howru.Model.obj_room;
 import com.example.yousangji.howru.Model.obj_serverresponse;
+import com.example.yousangji.howru.Model.thr_nettycli;
 import com.example.yousangji.howru.R;
 import com.example.yousangji.howru.Util.util_sharedpref;
 import com.github.faucamp.simplertmp.RtmpHandler;
+import com.google.gson.Gson;
 import com.seu.magicfilter.utils.MagicFilterType;
 
 import net.ossrs.yasea.SrsCameraView;
@@ -37,7 +48,9 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 import retrofit2.Call;
@@ -45,7 +58,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpListener,
-        SrsRecordHandler.SrsRecordListener, SrsEncodeHandler.SrsEncodeListener{
+        SrsRecordHandler.SrsRecordListener, SrsEncodeHandler.SrsEncodeListener,callback_filter {
 
     private static final String TAG = "Yasea";
 
@@ -53,6 +66,8 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     private ImageView btnSwitchCamera;
     private ImageView btnRecord;
     private ImageView btnSwitchEncoder;
+    private ImageButton btn_chat_show;
+    private LinearLayout lay_chat_pub;
 
 
 
@@ -70,8 +85,57 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     private util_sharedpref prefutil;
     private String userid;
     private String usernick;
+    private String url_profil;
     private String rmtitle;
     private String rmid;
+
+    //thumbnail
+    private RecyclerView recy_filter;
+    private ImageButton btn_filter;
+
+    //chat
+    private RecyclerView chatmst_list;
+    private RecyclerView.LayoutManager chat_layman;
+    private adt_recy_chat chat_recyadapter;
+    private ImageView btnchat_favorite;
+    private EditText chat_edit;
+    private ImageView btnchat_sbm;
+    obj_chatmsg msgobj;
+    private String str_msgobj=null;
+    obj_chatmsg msgobj_received;
+    private String str_msgobj_rev;
+    Gson gson=new Gson();
+    //chatServer_info
+    private String ipaddress="52.78.169.32";
+    private int Port=7777;
+
+    //private clientSocketchannel socketchannel_obj;
+    private thr_nettycli client;
+    private String m_msgcontent=null;
+
+    private Handler m_Handler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch(msg.what) {
+                case 0: // 소켓 생성 완료
+                    // 토스트
+                    Toast.makeText(broadcaster.this, "socket setting", Toast.LENGTH_SHORT).show();
+                    break;
+                case 1: // 데이터 수신 완료
+                    // 수신 데이터 토스트로 띄움.
+                    Toast.makeText(broadcaster.this, "server responded : " + msg.obj, Toast.LENGTH_SHORT).show();
+                        //Json으로 받은 데이터를 list에 추가
+                        Gson gson=new Gson();
+                        msgobj_received=gson.fromJson(msg.obj.toString(),obj_chatmsg.class);
+                        chat_recyadapter.addmsg(msgobj_received);
+                        chat_recyadapter.notifyDataSetChanged();
+                        Log.d("mytag","[broadcaster]received msg : "+msg.obj.toString());
+
+                    break;
+            }
+        }
+    };
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,16 +143,19 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         //roomobj 생성
         rmobj=new obj_room();
 
+        //GET userinfo from SharedPreference
         util_sharedpref.createInstance(getApplicationContext());
         prefutil=util_sharedpref.getInstance();
         String userinfostr=prefutil.getString("userinfo");
+        usernick=prefutil.getString("nickname");
+        url_profil=prefutil.getString("profileurl");
         try {
             JSONObject userobj = new JSONObject(userinfostr);
             userid = userobj.getString("userid");
         }catch (JSONException e){
             e.printStackTrace();
         }
-        Log.d("mytag","[braodcaster] userid : "+userid);
+        Log.d("mytag","[braodcaster] userid : "+userid+"usernickname : "+ usernick+" urlprofile : "+ url_profil);
 
 
 
@@ -109,18 +176,76 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         btnSwitchCamera = (ImageView) findViewById(R.id.swCam);
         btnRecord = (ImageView) findViewById(R.id.record);
         btnSwitchEncoder = (ImageView) findViewById(R.id.swEnc);
+        btn_filter=(ImageButton)findViewById(R.id.btn_filter);
+        btn_chat_show=(ImageButton)findViewById(R.id.btn_chat_pub);
 
+        //set_chat component
+        chatmst_list=(RecyclerView) findViewById(R.id.recy_chat_pub);
+        btnchat_favorite=(ImageView)findViewById(R.id.btnchat_show);
+        chat_edit=(EditText)findViewById(R.id.editchat_text);
+        btnchat_sbm=(ImageView) findViewById(R.id.btn_chat_sbm_pub);
+        lay_chat_pub=(LinearLayout)findViewById(R.id.lay_chat_pub);
+
+
+        //set_chat recyclerview
+        chatmst_list.setHasFixedSize(true);
+        chat_layman=new LinearLayoutManager(this);
+        chatmst_list.setLayoutManager(chat_layman);
+        chat_recyadapter=new adt_recy_chat(this);
+        chatmst_list.setAdapter(chat_recyadapter);
+
+
+        btn_chat_show.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(lay_chat_pub.getVisibility()==View.VISIBLE) {
+                    lay_chat_pub.setVisibility(View.GONE);
+                }else{
+                    lay_chat_pub.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
+
+        btnchat_sbm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                m_msgcontent=chat_edit.getText().toString();
+                msgobj.setMsg_state("3");
+                msgobj.setMsg_content(m_msgcontent);
+                msgobj.setFlag(1);
+                chat_recyadapter.addmsg(msgobj);
+                chat_recyadapter.notifyDataSetChanged();
+                str_msgobj=gson.toJson(msgobj);
+                client.sendMsg(str_msgobj);
+                Log.d("mytag","[broadcaster] sendmsg" +str_msgobj);
+                chat_edit.setText("");
+            }
+        });
 
 
         mPublisher = new SrsPublisher((SrsCameraView) findViewById(R.id.glsurfaceview_camera));
         mPublisher.setEncodeHandler(new SrsEncodeHandler(this));
         mPublisher.setRtmpHandler(new RtmpHandler(this));
         mPublisher.setRecordHandler(new SrsRecordHandler(this));
+        mPublisher.switchCameraFilter(MagicFilterType.NONE);
         mPublisher.setPreviewResolution(640, 360);
         mPublisher.setOutputResolution(360, 640);
         mPublisher.setVideoHDMode();
         mPublisher.startCamera();
 
+        initfilterwidgets();
+
+        btn_filter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(recy_filter.getVisibility()==View.VISIBLE) {
+                    recy_filter.setVisibility(View.GONE);
+                }else{
+                    recy_filter.setVisibility(View.VISIBLE);
+                }
+            }
+        });
         btnPublish.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -224,7 +349,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     }
 
 
-
+/*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -295,7 +420,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         setTitle(item.getTitle());
 
         return super.onOptionsItemSelected(item);
-    }
+    }*/
 
     @Override
     protected void onResume() {
@@ -385,6 +510,9 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
             public void onResponse(Call<obj_room> call, Response<obj_room> response) {
                 Log.d("mytag","[post streaminginfo]response body"+response.body().toString());
                 Log.d("mytag","[post streaminginfo]response message"+response.message());
+
+                //after post roominfo initialize chat component
+                initchat();
             }
 
             @Override
@@ -523,4 +651,60 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         handleException(e);
     }
 
+    private void initfilterwidgets(){
+        recy_filter=(RecyclerView)findViewById(R.id.recy_thumbnail);
+        LinearLayoutManager layman_filter=new LinearLayoutManager(this);
+        layman_filter.setOrientation(LinearLayoutManager.HORIZONTAL);
+        layman_filter.scrollToPosition(0);
+        recy_filter.setLayoutManager(layman_filter);
+        recy_filter.setHasFixedSize(true);
+        List<obj_filter_thumb> list_filter=new ArrayList<obj_filter_thumb>();
+        list_filter.add(new obj_filter_thumb(R.drawable.person,"cool",MagicFilterType.COOL));
+        list_filter.add(new obj_filter_thumb(R.drawable.person,"beauty",MagicFilterType.BEAUTY));
+        list_filter.add(new obj_filter_thumb(R.drawable.person,"evergreen",MagicFilterType.EVERGREEN));
+        list_filter.add(new obj_filter_thumb(R.drawable.person,"nostalgia",MagicFilterType.NOSTALGIA));
+        list_filter.add(new obj_filter_thumb(R.drawable.person,"romance",MagicFilterType.ROMANCE));
+        list_filter.add(new obj_filter_thumb(R.drawable.person,"sunrise",MagicFilterType.SUNRISE));
+        list_filter.add(new obj_filter_thumb(R.drawable.person,"sunset",MagicFilterType.SUNSET));
+        list_filter.add(new obj_filter_thumb(R.drawable.person,"tender",MagicFilterType.TENDER));
+        list_filter.add(new obj_filter_thumb(R.drawable.person,"warm",MagicFilterType.WARM));
+        list_filter.add(new obj_filter_thumb(R.drawable.person,"original",MagicFilterType.NONE));
+
+        adt_recy_filter adt_filter=new adt_recy_filter(list_filter,this);
+        recy_filter.setAdapter(adt_filter);
+        adt_filter.notifyDataSetChanged();
+
+    }
+
+    public void initchat(){
+
+        //set_chat Socket-(소켓 생성 및 read thread 생성)
+        client = new thr_nettycli(ipaddress, 8007, m_Handler);
+        client.start();
+        Log.d("mytag", "client 생성");
+
+
+        //set msgobj_default
+        msgobj=new obj_chatmsg();
+        msgobj.setMsg_state("0");
+        msgobj.setMsg_rmnum(rmid);
+        msgobj.setMsg_userid(userid);
+        msgobj.setMsg_nickname(usernick);
+        msgobj.setMsg_profileurl(url_profil);
+        msgobj.setMsg_content(usernick+"님이 방송을 시작하셨습니다.");
+        msgobj.setFlag(1);
+
+
+        str_msgobj=gson.toJson(msgobj);
+        client.sendMsg(str_msgobj);
+        Log.d("mytag","[broadcaster] sendsettingmsg" +str_msgobj);
+
+        chat_recyadapter.addmsg(msgobj);
+        chat_recyadapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onThumbnailClick(MagicFilterType type) {
+        mPublisher.switchCameraFilter(type);
+    }
 }

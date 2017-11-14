@@ -71,6 +71,18 @@
             android:src="@drawable/favorite"
             android:layout_toLeftOf="@+id/record"
             android:layout_margin="5dp"/>
+
+        <ImageButton
+            android:id="@+id/btn_chat_pub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/chat"
+            android:background="#00000000"
+            android:tint="#95ffffff"
+            android:layout_alignParentBottom="true"
+            android:layout_toLeftOf="@id/swEnc"
+            android:layout_margin="5dp"
+             />
     </RelativeLayout>
 
 
@@ -85,11 +97,25 @@
         android:layout_centerHorizontal="true"
         android:background="@color/colorAccent"/>
 
+    <ImageButton
+        android:id="@+id/btn_filter"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/filter"
+        android:background="#00000000"
+        android:tint="#ffffff"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@id/publish"
+        android:layout_marginBottom="100dp" />
+
+
+
 
 
 
 
     <LinearLayout
+        android:id="@+id/lay_chat_pub"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_gravity="bottom"
@@ -98,7 +124,7 @@
         android:visibility="gone">
 
         <android.support.v7.widget.RecyclerView
-            android:id="@+id/recychatmsg"
+            android:id="@+id/recy_chat_pub"
             android:layout_width="match_parent"
             android:layout_height="160dp"
             android:listSelector="#00000000"
@@ -117,12 +143,12 @@
             >
 
             <ImageView
-                android:id="@+id/btnchat_show"
+                android:id="@+id/btn_chat_like_pub"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:layout_margin="5dp"
-                android:src="@drawable/add"
+                android:src="@drawable/favorite"
                 android:onClick="true"/>
 
             <EditText
@@ -131,11 +157,11 @@
                 android:inputType="textMultiLine"
                 android:maxLines="4"
                 android:ems="10"
-                android:id="@+id/editchat_text"
+                android:id="@+id/edit_chat_pub"
                 android:layout_weight="0.4"/>
 
             <ImageView
-                android:id="@+id/btnchat_sbm"
+                android:id="@+id/btn_chat_sbm_pub"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -146,9 +172,13 @@
 
     <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="100dp"
         android:orientation="horizontal"
         android:clipToPadding="false"
         android:id="@+id/recy_thumbnail"
-        />
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="10dp"
+        android:visibility="gone"/>
+
+
 </RelativeLayout>

@@ -9,6 +9,9 @@ import org.json.JSONObject;
 
 public class obj_chatmsg {
 
+
+    String msg_profileurl;
+    String msg_userid;
     String msg_nickname="";
     String msg_content="";
     String msg_state="";
@@ -49,6 +52,14 @@ public class obj_chatmsg {
         this.msg_rmnum = msg_rmnum;
     }
 
+    public void setMsg_profileurl(String msg_profileurl) {
+        this.msg_profileurl = msg_profileurl;
+    }
+
+    public void setMsg_userid(String msg_userid) {
+        this.msg_userid = msg_userid;
+    }
+
     public String getMsg_nickname() {
         return msg_nickname;
     }
@@ -67,6 +78,14 @@ public class obj_chatmsg {
 
     public int getFlag() {
         return flag;
+    }
+
+    public String getMsg_profileurl() {
+        return msg_profileurl;
+    }
+
+    public String getMsg_userid() {
+        return msg_userid;
     }
 
     public String toJSONstr(){
