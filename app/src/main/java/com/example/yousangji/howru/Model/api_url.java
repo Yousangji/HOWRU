@@ -22,5 +22,6 @@ public class api_url {
     public static final String NOTIFY_FOLLOW="follow/put.php";
     public static final String NOTIFY_GET="follow/get.php";
     public static final String NOTIFY_SEND="follow/send.php";
+    public static final String POST_VOD="room/postvod.php";
 
 }

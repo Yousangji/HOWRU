@@ -1,6 +1,8 @@
 package com.example.yousangji.howru.View;
 
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,6 +19,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.yousangji.howru.Controller.Network;
 import com.example.yousangji.howru.Controller.adt_recy_chat;
 import com.example.yousangji.howru.Model.api_url;
 import com.example.yousangji.howru.Model.obj_chatmsg;
@@ -82,6 +85,7 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
     private String ipaddress="52.78.169.32";
     private int Port=7777;
     private ProgressBar m_pdIsLoading;
+    private boolean iswatching=false;
 
     obj_chatmsg msgobj;
     obj_chatmsg msgobj_received;
@@ -99,14 +103,37 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
     private obj_room rmobj;
     private util_sharedpref prefutil;
 
+    Network networkreceiver;
+
 
 
     private Handler m_Handler = new Handler() {
         public void handleMessage(Message msg) {
             switch(msg.what) {
                 case 0: // 소켓 생성 완료
-                    // 토스트
+                    // 소켓 연결 토스트
                     Toast.makeText(viewer.this, "socket setting", Toast.LENGTH_SHORT).show();
+
+                    if(!iswatching) {
+                        msgobj = new obj_chatmsg();
+                        msgobj.setMsg_state("0");
+                        msgobj.setMsg_nickname(nickname);
+                        msgobj.setMsg_userid(userid);
+                        msgobj.setMsg_profileurl(url_profile);
+                        msgobj.setMsg_rmnum(roomid);
+                        msgobj.setMsg_content(nickname + "님이 입장하셨습니다.");
+
+
+                        str_msgobj_send = gson.toJson(msgobj);
+                        client.sendMsg(str_msgobj_send);
+                        Log.d("mytag", "[viewer] sendsettingmsg" + str_msgobj_send);
+                        chat_recyadapter.addmsg(msgobj);
+                        chat_recyadapter.notifyDataSetChanged();
+                        iswatching=true;
+                    }else{
+                        Toast.makeText(viewer.this, "재연결 되었습니다.", Toast.LENGTH_SHORT).show();
+                    }
+
                     break;
                 case 1: // 데이터 수신 완료
                     // 수신 데이터 토스트로 띄움.
@@ -118,6 +145,22 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
                         chat_recyadapter.addmsg(msgobj_received);
                         chat_recyadapter.notifyDataSetChanged();
                     Log.d("mytag","[viewer]received msg : "+msg.obj.toString());
+                    break;
+
+                case 2:
+                    //set_chat Socket-(소켓 생성 및 read thread 생성)
+                    client = new thr_nettycli(ipaddress, 8007, m_Handler);
+                    client.start();
+                    Log.d("mytag", "client 재생성");
+                    Toast.makeText(viewer.this, "방송에 재연결합니다.", Toast.LENGTH_SHORT).show();
+                    break;
+                case 3:
+                    Toast.makeText(viewer.this, "네트워크 연결이 종료 되었습니다. 네트워크 연결시 방송에 재연결합니다.", Toast.LENGTH_SHORT).show();
+                    break;
+
+                case -1:
+                    //TODO: message return from server OK
+                    Log.d("mytag","[viewer]message return from server OK");
                     break;
             }
         }
@@ -131,6 +174,9 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.lay_viewer);
 
+
+
+
         Intent getroomid=getIntent();
         rminfo=getroomid.getStringExtra("rminfo");
         rmobj=new obj_room();
@@ -143,7 +189,8 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
         util_sharedpref.createInstance(getApplicationContext());
         prefutil=util_sharedpref.getInstance();
         userid=prefutil.getString("userid");
-
+        nickname=prefutil.getString("nickname");
+        url_profile=prefutil.getString("profileurl");
         Log.d("mytag","[list_follow] userid : "+userid);
 
 
@@ -170,27 +217,21 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
         client.start();
         Log.d("mytag", "client 생성");
 
-        msgobj=new obj_chatmsg();
-        msgobj.setMsg_state("0");
-        msgobj.setMsg_nickname(nickname);
-        msgobj.setMsg_userid(userid);
-        msgobj.setMsg_profileurl(url_profile);
-        msgobj.setMsg_rmnum(roomid);
-        msgobj.setMsg_content(nickname+"님이 입장하셨습니다.");
 
-        str_msgobj_send=gson.toJson(msgobj);
-        client.sendMsg(str_msgobj_send);
-        Log.d("mytag","[viewer] sendsettingmsg" +str_msgobj_send);
-        chat_recyadapter.addmsg(msgobj);
-        chat_recyadapter.notifyDataSetChanged();
 
         rmnum=rmobj.getRoomid();
+
         btnchat_sbm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 m_msgcontent=chat_edit.getText().toString();
                 ////////////////temp : 방번호 nickname 입력 => 접속
+                msgobj=new obj_chatmsg();
                 msgobj.setMsg_state("3");
+                msgobj.setMsg_nickname(nickname);
+                msgobj.setMsg_userid(userid);
+                msgobj.setMsg_profileurl(url_profile);
+                msgobj.setMsg_rmnum(roomid);
                 msgobj.setMsg_content(m_msgcontent);
                 chat_recyadapter.addmsg(msgobj);
                 chat_recyadapter.notifyDataSetChanged();
@@ -318,6 +359,11 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
         player.setPlayWhenReady(true); //run file/link when ready to play.
         player.setVideoDebugListener(this); //for listening to resolution change and  outputing the resolution
 
+        //네트워크 Check 등록
+        IntentFilter filter=new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        networkreceiver=new Network(m_Handler);
+        registerReceiver(networkreceiver,filter);
+
     }//End of onCreate
 
     @Override
@@ -365,6 +411,8 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
     @Override
     protected void onStop() {
         super.onStop();
+        unregisterReceiver(networkreceiver);
+        client.closesocket();
         Log.v(TAG, "onStop()...");
     }
 

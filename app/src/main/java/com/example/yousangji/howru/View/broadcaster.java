@@ -1,9 +1,11 @@
 package com.example.yousangji.howru.View;
 
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.hardware.Camera;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -21,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.example.yousangji.howru.Controller.Network;
 import com.example.yousangji.howru.Controller.adt_recy_chat;
 import com.example.yousangji.howru.Controller.adt_recy_filter;
 import com.example.yousangji.howru.Controller.api_follow;
@@ -34,17 +37,21 @@ import com.example.yousangji.howru.Model.thr_nettycli;
 import com.example.yousangji.howru.R;
 import com.example.yousangji.howru.Util.util_sharedpref;
 import com.github.faucamp.simplertmp.RtmpHandler;
+import com.google.android.gms.vision.CameraSource;
+import com.google.android.gms.vision.MultiProcessor;
+import com.google.android.gms.vision.Tracker;
+import com.google.android.gms.vision.face.Face;
+import com.google.android.gms.vision.face.FaceDetector;
 import com.google.gson.Gson;
 import com.seu.magicfilter.utils.MagicFilterType;
 
-import net.ossrs.yasea.SrsCameraView;
 import net.ossrs.yasea.SrsEncodeHandler;
-import net.ossrs.yasea.SrsPublisher;
 import net.ossrs.yasea.SrsRecordHandler;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
@@ -53,6 +60,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -60,14 +70,15 @@ import retrofit2.Response;
 public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpListener,
         SrsRecordHandler.SrsRecordListener, SrsEncodeHandler.SrsEncodeListener,callback_filter {
 
-    private static final String TAG = "Yasea";
+    private static final String TAG = "[broadcaster]";
 
     private Button btnPublish;
     private ImageView btnSwitchCamera;
-    private ImageView btnRecord;
+    private Button btnRecord;
     private ImageView btnSwitchEncoder;
     private ImageButton btn_chat_show;
     private LinearLayout lay_chat_pub;
+    private ImageButton btnfacetracker;
 
 
 
@@ -75,7 +86,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     private String rtmpUrl = "rtmp://ossrs.net/" + getRandomAlphaString(3) + '/' + getRandomAlphaDigitString(5);
     private String recPath = Environment.getExternalStorageDirectory().getPath() + "/test.mp4";
 
-    private SrsPublisher mPublisher;
+    private custompublisher mPublisher;
 
     //tempo
     private String rminfo;
@@ -94,6 +105,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     private ImageButton btn_filter;
 
     //chat
+    Network networkreceiver;
     private RecyclerView chatmst_list;
     private RecyclerView.LayoutManager chat_layman;
     private adt_recy_chat chat_recyadapter;
@@ -113,12 +125,43 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     private thr_nettycli client;
     private String m_msgcontent=null;
 
+    //TODO:temp
+    private CameraSource cameraSource;
+    private customcameraview preview;
+    private GraphicOverlay mGraphicOverlay;
+    private boolean flagfacetrack=false;
+    private boolean isbroadcasting=false;
+
     private Handler m_Handler = new Handler() {
         public void handleMessage(Message msg) {
             switch(msg.what) {
                 case 0: // 소켓 생성 완료
                     // 토스트
                     Toast.makeText(broadcaster.this, "socket setting", Toast.LENGTH_SHORT).show();
+
+                    if(!isbroadcasting){
+                    //set msgobj_default
+                    msgobj=new obj_chatmsg();
+                    msgobj.setMsg_state("0");
+                    msgobj.setMsg_rmnum(rmid);
+                    msgobj.setMsg_userid(userid);
+                    msgobj.setMsg_nickname(usernick);
+                    msgobj.setMsg_profileurl(url_profil);
+                    msgobj.setMsg_content(usernick+"님이 방송을 시작하셨습니다.");
+                    msgobj.setFlag(1);
+
+
+                    str_msgobj=gson.toJson(msgobj);
+                    client.sendMsg(str_msgobj);
+                    Log.d("mytag","[broadcaster] sendsettingmsg" +str_msgobj);
+
+                    chat_recyadapter.addmsg(msgobj);
+                    chat_recyadapter.notifyDataSetChanged();
+                    isbroadcasting=true;
+                    }else{
+                        Toast.makeText(broadcaster.this, "방송이 재시작 되었습니다.", Toast.LENGTH_SHORT).show();
+                    }
+
                     break;
                 case 1: // 데이터 수신 완료
                     // 수신 데이터 토스트로 띄움.
@@ -131,6 +174,24 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
                         Log.d("mytag","[broadcaster]received msg : "+msg.obj.toString());
 
                     break;
+
+                case 2:
+                    //TODO: reconnect chatting socket
+                    //set_chat Socket-(소켓 생성 및 read thread 생성)
+                    client = new thr_nettycli(ipaddress, 8007, m_Handler);
+                    client.start();
+                    Log.d("mytag", "client 생성");
+                    Toast.makeText(broadcaster.this, "방송에 재연결합니다.", Toast.LENGTH_SHORT).show();
+                    break;
+                case 3:
+                    //TODO: close chatting socket
+                    Toast.makeText(broadcaster.this, "네트워크 연결이 종료 되었습니다. 네트워크 연결시 방송에 재연결합니다.", Toast.LENGTH_SHORT).show();
+                    break;
+
+                case -1:
+                    //TODO: message return from server OK
+                    Log.d("mytag","[viewer]message return from server OK");
+                    break;
             }
         }
     };
@@ -140,6 +201,12 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //네트워크 Check 등록
+        IntentFilter filter=new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+         networkreceiver=new Network(m_Handler);
+        registerReceiver(networkreceiver,filter);
+
+
         //roomobj 생성
         rmobj=new obj_room();
 
@@ -170,11 +237,12 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         rtmpUrl = sp.getString("rtmpUrl", rtmpUrl);
 
 
+
         //edittext init
         final EditText edittitle=(EditText)findViewById(R.id.title);
         btnPublish = (Button) findViewById(R.id.publish);
         btnSwitchCamera = (ImageView) findViewById(R.id.swCam);
-        btnRecord = (ImageView) findViewById(R.id.record);
+        btnRecord = (Button) findViewById(R.id.record);
         btnSwitchEncoder = (ImageView) findViewById(R.id.swEnc);
         btn_filter=(ImageButton)findViewById(R.id.btn_filter);
         btn_chat_show=(ImageButton)findViewById(R.id.btn_chat_pub);
@@ -182,7 +250,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         //set_chat component
         chatmst_list=(RecyclerView) findViewById(R.id.recy_chat_pub);
         btnchat_favorite=(ImageView)findViewById(R.id.btnchat_show);
-        chat_edit=(EditText)findViewById(R.id.editchat_text);
+        chat_edit=(EditText)findViewById(R.id.edit_chat_pub);
         btnchat_sbm=(ImageView) findViewById(R.id.btn_chat_sbm_pub);
         lay_chat_pub=(LinearLayout)findViewById(R.id.lay_chat_pub);
 
@@ -193,6 +261,17 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         chatmst_list.setLayoutManager(chat_layman);
         chat_recyadapter=new adt_recy_chat(this);
         chatmst_list.setAdapter(chat_recyadapter);
+
+        //////////////
+        btnfacetracker=(ImageButton)findViewById(R.id.btn_facetracker);
+        mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
+
+        btnfacetracker.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                    startfacetrack();
+            }
+        });
 
 
         btn_chat_show.setOnClickListener(new View.OnClickListener() {
@@ -210,7 +289,13 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         btnchat_sbm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //Add Msg To Recyclerview & Send Msg
                 m_msgcontent=chat_edit.getText().toString();
+                msgobj=new obj_chatmsg();
+                msgobj.setMsg_rmnum(rmid);
+                msgobj.setMsg_userid(userid);
+                msgobj.setMsg_nickname(usernick);
+                msgobj.setMsg_profileurl(url_profil);
                 msgobj.setMsg_state("3");
                 msgobj.setMsg_content(m_msgcontent);
                 msgobj.setFlag(1);
@@ -223,8 +308,10 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
             }
         });
 
+        preview=(customcameraview)findViewById(R.id.glsurfaceview_camera);
 
-        mPublisher = new SrsPublisher((SrsCameraView) findViewById(R.id.glsurfaceview_camera));
+
+        mPublisher = new custompublisher(preview);
         mPublisher.setEncodeHandler(new SrsEncodeHandler(this));
         mPublisher.setRtmpHandler(new RtmpHandler(this));
         mPublisher.setRecordHandler(new SrsRecordHandler(this));
@@ -253,7 +340,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
 
                     //TODO: GET userobj info from sharedpref
                     //userid=edituserid.getText().toString();
-                    usernick=userid;
+                    //usernick=userid;
                     rmtitle=edittitle.getText().toString();
                     SimpleDateFormat s = new SimpleDateFormat("yyMMddhhmmss");
                     rmid = s.format(new Date())+userid;
@@ -280,8 +367,21 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
                     mPublisher.stopPublish();
                     mPublisher.stopRecord();
                     btnPublish.setText("방송하기");
-                    //btnRecord.setText("record");
+                    btnRecord.setText("record");
                     btnSwitchEncoder.setEnabled(true);
+
+                    //방 종료 메시지
+                    msgobj=new obj_chatmsg();
+                    msgobj.setMsg_rmnum(rmid);
+                    msgobj.setMsg_userid(userid);
+                    msgobj.setMsg_nickname(usernick);
+                    msgobj.setMsg_profileurl(url_profil);
+                    msgobj.setMsg_state("1");
+                    msgobj.setMsg_content(usernick+"님이 방을 종료합니다.");
+                    chat_recyadapter.addmsg(msgobj);
+                    chat_recyadapter.notifyDataSetChanged();
+                    str_msgobj=gson.toJson(msgobj);
+                    client.sendMsg(str_msgobj);
                 }
             }
         });
@@ -296,8 +396,25 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         btnRecord.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               /*
-                if (btnRecord.getImageAlpha()==80) {
+/*
+                if (btnRecord.getImageAlpha()==255) {
+                    if (mPublisher.startRecord(recPath)) {
+                        btnRecord.setImageResource(R.drawable.stop);
+                        btnRecord.setImageAlpha(100);
+                    }
+                } else if (btnRecord.getImageAlpha()==100) {
+                    mPublisher.pauseRecord();
+                    btnRecord.setImageResource(R.drawable.play);
+                    btnRecord.setImageAlpha(70);
+                } else if (btnRecord.getImageAlpha()==70) {
+                    mPublisher.resumeRecord();
+                    btnRecord.setImageAlpha(255);
+                    btnRecord.setImageResource(R.drawable.stop);
+                }
+               // btnRecord.setImageAlpha(0);
+            }*/
+
+                if (btnRecord.getText().toString().contentEquals("record")) {
                     if (mPublisher.startRecord(recPath)) {
                         btnRecord.setText("pause");
                     }
@@ -308,7 +425,6 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
                     mPublisher.resumeRecord();
                     btnRecord.setText("pause");
                 }
-                btnRecord.setImageAlpha(0);*/
             }
         });
 
@@ -448,7 +564,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         super.onConfigurationChanged(newConfig);
         mPublisher.stopEncode();
         mPublisher.stopRecord();
-        //btnRecord.setText("record");
+        btnRecord.setText("record");
         mPublisher.setScreenOrientation(newConfig.orientation);
         if (btnPublish.getText().toString().contentEquals("stop")) {
             mPublisher.startEncode();
@@ -484,7 +600,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
             mPublisher.stopPublish();
             mPublisher.stopRecord();
             btnPublish.setText("publish");
-           // btnRecord.setText("record");
+            btnRecord.setText("record");
             btnSwitchEncoder.setEnabled(true);
         } catch (Exception e1) {
             //
@@ -500,23 +616,29 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
 
     @Override
     public void onRtmpConnected(String msg) {
-        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+
 
         Log.d("mytag","[post streaminfo] userid: "+userid+"usernick: "+usernick+"rmtitle:"+rmtitle+"rmid: "+rmid);
 
         //Stream list
-        roomapi.getRetrofit(getApplicationContext()).post(rmid,rmtitle,userid,usernick).enqueue(new Callback<obj_room>() {
+        roomapi.getRetrofit(getApplicationContext()).post(rmid,rmtitle,userid,usernick).enqueue(new Callback<obj_serverresponse>() {
             @Override
-            public void onResponse(Call<obj_room> call, Response<obj_room> response) {
+            public void onResponse(Call<obj_serverresponse> call, Response<obj_serverresponse> response) {
                 Log.d("mytag","[post streaminginfo]response body"+response.body().toString());
                 Log.d("mytag","[post streaminginfo]response message"+response.message());
+                obj_serverresponse res=response.body();
+                if(res.getStatus().equals("OK")) {
+                    Toast.makeText(getApplicationContext(), res.getMessage(), Toast.LENGTH_SHORT).show();
+                    //after post roominfo initialize chat component
+                    initchat();
+                }else{
+                    Toast.makeText(getApplicationContext(), res.getMessage(), Toast.LENGTH_SHORT).show();
 
-                //after post roominfo initialize chat component
-                initchat();
+                }
             }
 
             @Override
-            public void onFailure(Call<obj_room> call, Throwable t) {
+            public void onFailure(Call<obj_serverresponse> call, Throwable t) {
                 Log.d("mytag","[post streaminginfo]response failure");
             }
         });
@@ -670,7 +792,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         list_filter.add(new obj_filter_thumb(R.drawable.person,"warm",MagicFilterType.WARM));
         list_filter.add(new obj_filter_thumb(R.drawable.person,"original",MagicFilterType.NONE));
 
-        adt_recy_filter adt_filter=new adt_recy_filter(list_filter,this);
+        adt_recy_filter adt_filter=new adt_recy_filter(list_filter,this,this);
         recy_filter.setAdapter(adt_filter);
         adt_filter.notifyDataSetChanged();
 
@@ -684,27 +806,179 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         Log.d("mytag", "client 생성");
 
 
-        //set msgobj_default
-        msgobj=new obj_chatmsg();
-        msgobj.setMsg_state("0");
-        msgobj.setMsg_rmnum(rmid);
-        msgobj.setMsg_userid(userid);
-        msgobj.setMsg_nickname(usernick);
-        msgobj.setMsg_profileurl(url_profil);
-        msgobj.setMsg_content(usernick+"님이 방송을 시작하셨습니다.");
-        msgobj.setFlag(1);
-
-
-        str_msgobj=gson.toJson(msgobj);
-        client.sendMsg(str_msgobj);
-        Log.d("mytag","[broadcaster] sendsettingmsg" +str_msgobj);
-
-        chat_recyadapter.addmsg(msgobj);
-        chat_recyadapter.notifyDataSetChanged();
     }
+
+
 
     @Override
     public void onThumbnailClick(MagicFilterType type) {
         mPublisher.switchCameraFilter(type);
+    }
+/*
+    public CameraSource createCameraSource() {
+
+        Context context = getApplicationContext();
+
+        FaceDetector detector = new FaceDetector.Builder(context)
+                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+                .build();
+
+        detector.setProcessor(
+                new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory())
+                        .build());
+
+        if (!detector.isOperational()) {
+            // Note: The first time that an app using face API is installed on a device, GMS will
+            // download a native library to the device in order to do detection.  Usually this
+            // completes before the app is run for the first time.  But if that download has not yet
+            // completed, then the above call will not detect any faces.
+            //
+            // isOperational() can be used to check if the required native library is currently
+            // available.  The detector will automatically become operational once the library
+            // download completes on device.
+            Log.w(TAG, "Face detector dependencies are not yet available.");
+        }
+
+        cameraSource = new CameraSource.Builder(context, detector)
+                .setRequestedPreviewSize(640, 480)
+                .setRequestedFps(30.0f)
+                .build();
+
+
+
+        return cameraSource;
+
+    }
+*/
+
+public void startfacetrack(){
+
+    if(flagfacetrack==false) {
+        FaceDetector detector = new FaceDetector.Builder(getApplicationContext())
+                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+                .build();
+
+        detector.setProcessor(
+                new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory())
+                        .build());
+
+        if (!detector.isOperational()) {
+            // Note: The first time that an app using face API is installed on a device, GMS will
+            // download a native library to the device in order to do detection.  Usually this
+            // completes before the app is run for the first time.  But if that download has not yet
+            // completed, then the above call will not detect any faces.
+            //
+            // isOperational() can be used to check if the required native library is currently
+            // available.  The detector will automatically become operational once the library
+            // download completes on device.
+            Log.w(TAG, "Face detector dependencies are not yet available.");
+        }
+
+        mPublisher.startface(detector);
+        flagfacetrack=true;
+    }else{
+        mPublisher.stopface();
+    }
+}
+    //==============================================================================================
+    // Graphic Face Tracker
+    //==============================================================================================
+
+    /**
+     * Factory for creating a face tracker to be associated with a new face.  The multiprocessor
+     * uses this factory to create face trackers as needed -- one for each individual.
+     */
+    private class GraphicFaceTrackerFactory implements MultiProcessor.Factory<Face> {
+        @Override
+        public Tracker<Face> create(Face face) {
+            return new GraphicFaceTracker(mGraphicOverlay);
+        }
+    }
+
+    /**
+     * Face tracker for each detected individual. This maintains a face graphic within the app's
+     * associated face overlay.
+     */
+    private class GraphicFaceTracker extends Tracker<Face> {
+        private GraphicOverlay mOverlay;
+        private FaceGraphic mFaceGraphic;
+
+        GraphicFaceTracker(GraphicOverlay overlay) {
+            mOverlay = overlay;
+            mFaceGraphic = new FaceGraphic(overlay);
+        }
+
+        /**
+         * Start tracking the detected face instance within the face overlay.
+         */
+        @Override
+        public void onNewItem(int faceId, Face item) {
+            mFaceGraphic.setId(faceId);
+        }
+
+        /**
+         * Update the position/characteristics of the face within the overlay.
+         */
+        @Override
+        public void onUpdate(FaceDetector.Detections<Face> detectionResults, Face face) {
+            mOverlay.add(mFaceGraphic);
+            mFaceGraphic.updateFace(face);
+            Log.d("mytag","[broadcaster graphicfactory]update");
+        }
+
+        /**
+         * Hide the graphic when the corresponding face was not detected.  This can happen for
+         * intermediate frames temporarily (e.g., if the face was momentarily blocked from
+         * view).
+         */
+        @Override
+        public void onMissing(FaceDetector.Detections<Face> detectionResults) {
+            mOverlay.remove(mFaceGraphic);
+        }
+
+        /**
+         * Called when the face is assumed to be gone for good. Remove the graphic annotation from
+         * the overlay.
+         */
+        @Override
+        public void onDone() {
+            mOverlay.remove(mFaceGraphic);
+        }
+    }
+
+    public void postvideo(String pp,String rmid){
+        Log.d("mytag",TAG+"postvideo");
+        File file=new File(pp);
+        Log.d("mytag","[main_fr_setting]pp : "+file.getName());
+        MultipartBody.Part filepart=MultipartBody.Part.createFormData("file",file.getName(), RequestBody.create(MediaType.parse("video/*"),file));
+        RequestBody req_body_rmid = RequestBody.create(MediaType.parse("text/plain"), rmid);
+        roomapi.getRetrofit(getApplicationContext()).uploadVideo(filepart,req_body_rmid).enqueue(new Callback<obj_serverresponse>() {
+            @Override
+            public void onResponse(Call<obj_serverresponse> call, Response<obj_serverresponse> response) {
+                Log.d("mytag","[main_fr_setting] "+response.message());
+
+                obj_serverresponse serverres=response.body();
+                try {
+                    JSONObject userobj = new JSONObject(serverres.getData());
+
+                }catch (JSONException e){
+                    e.printStackTrace();
+                }
+                Toast.makeText(getApplicationContext(), serverres.getMessage(), Toast.LENGTH_SHORT).show();            }
+
+            @Override
+            public void onFailure(Call<obj_serverresponse> call, Throwable t) {
+                t.printStackTrace();
+                Toast.makeText(getApplicationContext(), "네트워크 오류, 다시 실행해주세요", Toast.LENGTH_SHORT).show();
+                Log.d("mytag","[main_fr_setting] putwithimg failure");
+            }
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(networkreceiver);
+        client.closesocket();
     }
 }

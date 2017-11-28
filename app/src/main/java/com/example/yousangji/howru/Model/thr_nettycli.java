@@ -53,43 +53,45 @@ public class thr_nettycli extends Thread{
 
     public void run() {
 
-        try {
-
-            final SslContext sslContext;
-
-            if (SSL) {
-                sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-            } else {
-                sslContext = null;
-            }
-
-
-            EventLoopGroup bossGroup = new NioEventLoopGroup();
             try {
-                Bootstrap b = new Bootstrap();
-                b.group(bossGroup)
-                        .channel(NioSocketChannel.class)
-                        .option(ChannelOption.TCP_NODELAY, true)
-                        .option(ChannelOption.SO_KEEPALIVE, true)
-                        .handler(new ChannelInitializer<SocketChannel>() {
-                            @Override
-                            protected void initChannel(SocketChannel ch) throws Exception {
-                                ChannelPipeline p = ch.pipeline();
-                                if (sslContext != null) {
-                                    p.addLast(sslContext.newHandler(ch.alloc(), HOST, PORT));
-                                }
-                                p.addLast(new LoggingHandler(LogLevel.INFO));
-                                p.addLast(new hdr_nettycli(mhandler));
-                                p.addLast(new StringDecoder(CharsetUtil.UTF_8), new StringEncoder(CharsetUtil.UTF_8));
-                            }
-                        });
-                // Start the Client
-                f = b.connect(HOST, PORT);
-                mChannel=f.sync().channel();
-                Log.d("mytag", "setsocket");
 
-                //Wait until the connection is closed
-                f.channel().closeFuture().sync();
+                final SslContext sslContext;
+
+                if (SSL) {
+                    sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+                } else {
+                    sslContext = null;
+                }
+
+
+                EventLoopGroup bossGroup = new NioEventLoopGroup();
+                try {
+                    Bootstrap b = new Bootstrap();
+                    b.group(bossGroup)
+                            .channel(NioSocketChannel.class)
+                            .option(ChannelOption.TCP_NODELAY, true)
+                            .option(ChannelOption.SO_KEEPALIVE, true)
+                            .handler(new ChannelInitializer<SocketChannel>() {
+                                @Override
+                                protected void initChannel(SocketChannel ch) throws Exception {
+                                    ChannelPipeline p = ch.pipeline();
+                                    if (sslContext != null) {
+                                        p.addLast(sslContext.newHandler(ch.alloc(), HOST, PORT));
+                                    }
+                                    p.addLast(new LoggingHandler(LogLevel.INFO));
+                                    p.addLast(new hdr_nettycli(mhandler));
+                                    p.addLast(new StringDecoder(CharsetUtil.UTF_8), new StringEncoder(CharsetUtil.UTF_8));
+                                   // p.addLast("ping",new IdleStateHandler(0,5,0));
+                                   // p.addLast("heartbeat",new hdr_heartbeat());
+                                }
+                            });
+                    // Start the Client
+                    f = b.connect(HOST, PORT);
+                    mChannel = f.sync().channel();
+                    Log.d("mytag", "setsocket");
+
+                    //Wait until the connection is closed
+                    f.channel().closeFuture().sync();
             /*
             //java command
             String command;
@@ -130,23 +132,26 @@ public class thr_nettycli extends Thread{
                 jsonmsg.put("state", "3");
             }*/
 
-            } catch (Exception e) {
-                Log.d("mytag", "[Exception] netty setting ");
-                e.printStackTrace();
-            } finally {
+                } catch (Exception e) {
+                    Log.d("mytag", "[Exception] netty setting ");
+                    e.printStackTrace();
+                } finally {
 
-                //Shut down the event loop the terminal all threads.
-                bossGroup.shutdownGracefully();
+                    //Shut down the event loop the terminal all threads.
+                    bossGroup.shutdownGracefully();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+
+
     }
 
     public void sendMsg(String data) {
-        /*
+/*
         thread_sendmsg = new Thread_send(f.channel(), data);
-        thread_sendmsg.start();*/
+        thread_sendmsg.start();
+*/
         if(mChannel.isOpen()) {
             Log.d("mytag",data);
             mChannel.writeAndFlush(data);
@@ -155,6 +160,12 @@ public class thr_nettycli extends Thread{
             Log.d("mytag","notopen");
         }
     }
+
+    public void closesocket(){
+        f.channel().close();
+    }
+
+
 
 
 

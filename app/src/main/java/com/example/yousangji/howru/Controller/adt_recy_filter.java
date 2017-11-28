@@ -1,5 +1,6 @@
 package com.example.yousangji.howru.Controller;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,11 +21,13 @@ import java.util.List;
 public class adt_recy_filter extends RecyclerView.Adapter<adt_recy_filter.ThumbnailsViewHolder> {
     private callback_filter filtercallback;
     private List<obj_filter_thumb> list_filter;
+    private Context mcontext;
 
-    public adt_recy_filter(List<obj_filter_thumb> dataset,callback_filter callback_filter){
+    public adt_recy_filter(List<obj_filter_thumb> dataset,callback_filter callback_filter,Context cont){
         Log.v("mytag", "[adt_recy_filter] Filter Adapter has " + dataset.size() + " items");
         this.list_filter= dataset;
         this.filtercallback = callback_filter;
+        this.mcontext=cont;
     }
 
     @Override
@@ -40,6 +43,7 @@ public class adt_recy_filter extends RecyclerView.Adapter<adt_recy_filter.Thumbn
     public void onBindViewHolder(ThumbnailsViewHolder holder, int position) {
         obj_filter_thumb thumb_filter=list_filter.get(position);
         holder.thumbnail.setImageResource(thumb_filter.getImgurl());
+
         holder.txt_filtername.setText(thumb_filter.getTitle_filter());
         holder.thumbnail.setOnClickListener(new View.OnClickListener() {
             @Override

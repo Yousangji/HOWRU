@@ -47,7 +47,7 @@ public class main_fr_noti extends Fragment {
     Handler hdlr_imcoming=new Handler(){
         @Override
         public void handleMessage(Message msg) {
-            super.handleMessage(msg);
+           // super.handleMessage(msg);
             fcmmsg = msg.getData().getString("msg");
             retro_getnoti();
         }

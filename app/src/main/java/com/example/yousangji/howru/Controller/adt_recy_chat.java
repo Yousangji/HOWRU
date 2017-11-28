@@ -3,6 +3,7 @@ package com.example.yousangji.howru.Controller;
 import android.content.Context;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,11 +33,12 @@ public class adt_recy_chat  extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private Context context;
     private obj_chatmsg nwmsgobj=null;
 
+    /*
     public  adt_recy_chat(Context contextini, List<obj_chatmsg> list_chatmsgini){
         this.list_chatmsg=list_chatmsgini;
         this.context=contextini;
     }
-
+*/
 
     public adt_recy_chat(Context contextini){
         this.context=contextini;
@@ -93,6 +95,7 @@ public class adt_recy_chat  extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     public void addmsg(obj_chatmsg msg){
         list_chatmsg.add(msg);
+        Log.d("mytag","[adt_recy_chat]msg"+msg.getMsg_content());
     }
     public void addmsg_tolist(JSONObject msgobj){
         try {

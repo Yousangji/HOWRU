@@ -27,59 +27,74 @@ public class hdr_nettycli extends ChannelInboundHandlerAdapter {
     public hdr_nettycli(Handler handler){
         this.m_handler=handler;
 
-        /*
-        firstMessage  = Unpooled.buffer(echoclient.SIZE);
-
-
-        for(int i =0 ; i< firstMessage.capacity();i++){
-            firstMessage.writeByte((byte)i);
-        }*/
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         // LOG.info("전송한 문자열 {}"+firstMessage.toString());
         //String sendMessage = "Hello, Netty!";
-
+        // 메시지 얻어오기
+        Message handlermsg = m_handler.obtainMessage();
+        // 메시지 ID 설정
+        handlermsg.what = 0;
+        m_handler.sendMessage(handlermsg);
+        Log.d("mytag","[handler nettyclie]channelactive msg"+handlermsg);
 
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+
         String readMessage = ((ByteBuf)msg).toString(CharsetUtil.UTF_8);
         Log.d("mytag",readMessage);
 
-        JSONObject jsonObj = new JSONObject(readMessage);
-        // 메시지 얻어오기
-        Message handlermsg = m_handler.obtainMessage();
-        // 메시지 ID 설정
-        handlermsg.what = 1;
-        // 메시지 정보 설정3 (Object 형식)
-        handlermsg.obj = readMessage;
-        m_handler.sendMessage(handlermsg);
+        if(readMessage.equals("ping")){
+            ctx.channel().write("pong");
+            Log.d("mytag","pong to server");
 
-        switch(jsonObj.getString("state")){
-            //0. 접속멤버추가
-            //1. 방종료
-            //2. 방나가기
-            //3. 메시지전송
-            case "0":
-                Log.d("channelread",jsonObj.get("nickname")+"님이 입장하셨습니다.");
-                break;
-            case "1":
-                Log.d("channelread","스트리밍이 종료되었습니다 방을 나갑니다");
-                ctx.close();
-                break;
+        }else{
+            JSONObject jsonObj = new JSONObject(readMessage);
+            if(jsonObj.getString("status").equals("-1")){
+                // 메시지 얻어오기
+                Message handlermsg = m_handler.obtainMessage();
+                // 메시지 ID 설정
+                handlermsg.what = -1;
+                // 메시지 정보 설정3 (Object 형식)
+                handlermsg.obj = readMessage;
+                m_handler.sendMessage(handlermsg);
+            }else {
+                // 메시지 얻어오기
+                Message handlermsg = m_handler.obtainMessage();
+                // 메시지 ID 설정
+                handlermsg.what = 1;
+                // 메시지 정보 설정3 (Object 형식)
+                handlermsg.obj = readMessage;
+                m_handler.sendMessage(handlermsg);
 
-            case "2":
-                Log.d("channelread",jsonObj.get("nickname")+"님이 퇴장하셨습니다.");
-                break;
+                switch (jsonObj.getString("state")) {
+                    //0. 접속멤버추가
+                    //1. 방종료
+                    //2. 방나가기
+                    //3. 메시지전송
+                    case "0":
+                        Log.d("channelread", jsonObj.get("nickname") + "님이 입장하셨습니다.");
+                        break;
+                    case "1":
+                        Log.d("channelread", "스트리밍이 종료되었습니다 방을 나갑니다");
+                        ctx.close();
+                        break;
 
-            case "3":
-                Log.d("channelread",jsonObj.get("nickname") +": "+jsonObj.get("msg"));
-                break;
+                    case "2":
+                        Log.d("channelread", jsonObj.get("nickname") + "님이 퇴장하셨습니다.");
+                        break;
+
+                    case "3":
+                        Log.d("channelread", jsonObj.get("nickname") + ": " + jsonObj.get("msg"));
+                        break;
+
+                }
+            }
         }
-
     }
 
     @Override
@@ -91,6 +106,14 @@ public class hdr_nettycli extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
         ctx.close();
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        ctx.close();
+        Log.d("mytag","[hdr_nettycli] channel inactive close ctx");
+
     }
 
     /*

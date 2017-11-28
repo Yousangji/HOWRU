@@ -45,6 +45,9 @@ public class main_fr_home_container extends Fragment{
         adt_frpager_main adapter = new adt_frpager_main(getChildFragmentManager());
         adapter.addFragment(new main_fr_group(), "follower");
         adapter.addFragment(new main_fr_home(), "home");
+        adapter.addFragment(new main_fr_home(), "놀방");
+        adapter.addFragment(new main_fr_home(), "술방");
+        adapter.addFragment(new main_fr_home(), "먹방");
         viewPager.setAdapter(adapter);
     }
 
