@@ -16,16 +16,20 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.yousangji.howru.Controller.Network;
 import com.example.yousangji.howru.Controller.adt_recy_chat;
 import com.example.yousangji.howru.Controller.adt_recy_filter;
+import com.example.yousangji.howru.Controller.adt_spinner;
 import com.example.yousangji.howru.Controller.api_follow;
 import com.example.yousangji.howru.Controller.callback_filter;
 import com.example.yousangji.howru.Controller.roomapi;
@@ -37,7 +41,6 @@ import com.example.yousangji.howru.Model.thr_nettycli;
 import com.example.yousangji.howru.R;
 import com.example.yousangji.howru.Util.util_sharedpref;
 import com.github.faucamp.simplertmp.RtmpHandler;
-import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
@@ -72,13 +75,25 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
 
     private static final String TAG = "[broadcaster]";
 
+    //spinner
+    private Spinner spinner_category;
+
+    private String[] value_category={"수다방","먹방","놀방","액팅방","공방","기타"};
+    private Spinner spinner_privacy;
+    private String[] value_privacy={"전체 공개","팔로워","비공개"};
+    private adt_spinner adt_spinner_category;
+    private ArrayAdapter<String>  adt_spinner_privacy;
+    private ImageView img_privacy;
+
     private Button btnPublish;
     private ImageView btnSwitchCamera;
     private Button btnRecord;
     private ImageView btnSwitchEncoder;
     private ImageButton btn_chat_show;
     private LinearLayout lay_chat_pub;
+    private LinearLayout lay_btn_pub;
     private ImageButton btnfacetracker;
+
 
 
 
@@ -126,7 +141,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     private String m_msgcontent=null;
 
     //TODO:temp
-    private CameraSource cameraSource;
+
     private customcameraview preview;
     private GraphicOverlay mGraphicOverlay;
     private boolean flagfacetrack=false;
@@ -176,7 +191,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
                     break;
 
                 case 2:
-                    //TODO: reconnect chatting socket
+
                     //set_chat Socket-(소켓 생성 및 read thread 생성)
                     client = new thr_nettycli(ipaddress, 8007, m_Handler);
                     client.start();
@@ -184,12 +199,11 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
                     Toast.makeText(broadcaster.this, "방송에 재연결합니다.", Toast.LENGTH_SHORT).show();
                     break;
                 case 3:
-                    //TODO: close chatting socket
+                    client.closesocket();
                     Toast.makeText(broadcaster.this, "네트워크 연결이 종료 되었습니다. 네트워크 연결시 방송에 재연결합니다.", Toast.LENGTH_SHORT).show();
                     break;
 
                 case -1:
-                    //TODO: message return from server OK
                     Log.d("mytag","[viewer]message return from server OK");
                     break;
             }
@@ -246,7 +260,9 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         btnSwitchEncoder = (ImageView) findViewById(R.id.swEnc);
         btn_filter=(ImageButton)findViewById(R.id.btn_filter);
         btn_chat_show=(ImageButton)findViewById(R.id.btn_chat_pub);
+        lay_btn_pub=(LinearLayout)findViewById(R.id.lay_btn_pub);
 
+        ////******************Chat****************************************
         //set_chat component
         chatmst_list=(RecyclerView) findViewById(R.id.recy_chat_pub);
         btnchat_favorite=(ImageView)findViewById(R.id.btnchat_show);
@@ -261,10 +277,64 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         chatmst_list.setLayoutManager(chat_layman);
         chat_recyadapter=new adt_recy_chat(this);
         chatmst_list.setAdapter(chat_recyadapter);
+       //********************************************************************
 
-        //////////////
+
+        /////////////////////////////////////////////////////////////////////
+        //TODO:need to remove or fix
         btnfacetracker=(ImageButton)findViewById(R.id.btn_facetracker);
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
+        /////////////////////////////////////////////////////////////////////
+
+        //********************Spinner component/********************
+        spinner_category=(Spinner)findViewById(R.id.spinner_category_pub);
+        spinner_privacy=(Spinner)findViewById(R.id.spinner_open_pub);
+        img_privacy=(ImageView)findViewById(R.id.img_public_pub);
+
+        //set category spinner
+        adt_spinner_category= new adt_spinner(broadcaster.this,android.R.layout.simple_list_item_1);
+        adt_spinner_category.addAll(value_category);
+        adt_spinner_category.add("카테고리");
+        spinner_category.setAdapter(adt_spinner_category);
+        spinner_category.setSelection(adt_spinner_category.getCount());
+        spinner_category.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                Toast.makeText(broadcaster.this, "selected", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        //set privacy spinner
+        adt_spinner_privacy=new ArrayAdapter<String>(broadcaster.this,android.R.layout.simple_spinner_dropdown_item,value_privacy);
+        spinner_privacy.setAdapter(adt_spinner_privacy);
+        spinner_privacy.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                switch (i){
+                    case 0:
+                        img_privacy.setImageResource(R.drawable.world);
+                        break;
+                    case 1:
+                        img_privacy.setImageResource(R.drawable.group);
+                        break;
+                    case 2:
+                        img_privacy.setImageResource(R.drawable.lock);
+                        break;
+                }
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+        //********************************************************************
 
         btnfacetracker.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -277,10 +347,9 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         btn_chat_show.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(lay_chat_pub.getVisibility()==View.VISIBLE) {
-                    lay_chat_pub.setVisibility(View.GONE);
-                }else{
+                if(lay_chat_pub.getVisibility()==View.GONE) {
                     lay_chat_pub.setVisibility(View.VISIBLE);
+                    lay_btn_pub.setVisibility(View.GONE);
                 }
             }
         });
@@ -363,6 +432,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
                     }*/
                     btnPublish.setText("stop");
                     btnSwitchEncoder.setEnabled(false);
+
                 } else if (btnPublish.getText().toString().contentEquals("stop")) {
                     mPublisher.stopPublish();
                     mPublisher.stopRecord();
@@ -396,23 +466,7 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         btnRecord.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-/*
-                if (btnRecord.getImageAlpha()==255) {
-                    if (mPublisher.startRecord(recPath)) {
-                        btnRecord.setImageResource(R.drawable.stop);
-                        btnRecord.setImageAlpha(100);
-                    }
-                } else if (btnRecord.getImageAlpha()==100) {
-                    mPublisher.pauseRecord();
-                    btnRecord.setImageResource(R.drawable.play);
-                    btnRecord.setImageAlpha(70);
-                } else if (btnRecord.getImageAlpha()==70) {
-                    mPublisher.resumeRecord();
-                    btnRecord.setImageAlpha(255);
-                    btnRecord.setImageResource(R.drawable.stop);
-                }
-               // btnRecord.setImageAlpha(0);
-            }*/
+
 
                 if (btnRecord.getText().toString().contentEquals("record")) {
                     if (mPublisher.startRecord(recPath)) {
@@ -465,78 +519,6 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
     }
 
 
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_filter, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        } else {
-            switch (id) {
-                case R.id.cool_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.COOL);
-                    break;
-                case R.id.beauty_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.BEAUTY);
-                    break;
-                case R.id.early_bird_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.EARLYBIRD);
-                    break;
-                case R.id.evergreen_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.EVERGREEN);
-                    break;
-                case R.id.n1977_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.N1977);
-                    break;
-                case R.id.nostalgia_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.NOSTALGIA);
-                    break;
-                case R.id.romance_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.ROMANCE);
-                    break;
-                case R.id.sunrise_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.SUNRISE);
-                    break;
-                case R.id.sunset_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.SUNSET);
-                    break;
-                case R.id.tender_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.TENDER);
-                    break;
-                case R.id.toast_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.TOASTER2);
-                    break;
-                case R.id.valencia_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.VALENCIA);
-                    break;
-                case R.id.walden_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.WALDEN);
-                    break;
-                case R.id.warm_filter:
-                    mPublisher.switchCameraFilter(MagicFilterType.WARM);
-                    break;
-                case R.id.original_filter:
-                default:
-                    mPublisher.switchCameraFilter(MagicFilterType.NONE);
-                    break;
-            }
-        }
-        setTitle(item.getTitle());
-
-        return super.onOptionsItemSelected(item);
-    }*/
 
     @Override
     protected void onResume() {
@@ -616,12 +598,10 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
 
     @Override
     public void onRtmpConnected(String msg) {
-
-
-        Log.d("mytag","[post streaminfo] userid: "+userid+"usernick: "+usernick+"rmtitle:"+rmtitle+"rmid: "+rmid);
+        Log.d("mytag","[post streaminfo] userid: "+userid+"usernick: "+usernick+"rmtitle:"+rmtitle+"rmid: "+rmid+" category"+spinner_category.getSelectedItem()+", privacy : "+spinner_privacy.getSelectedItem());
 
         //Stream list
-        roomapi.getRetrofit(getApplicationContext()).post(rmid,rmtitle,userid,usernick).enqueue(new Callback<obj_serverresponse>() {
+        roomapi.getRetrofit(getApplicationContext()).post(rmid,rmtitle,userid,usernick,spinner_category.getSelectedItem().toString(),spinner_privacy.getSelectedItem().toString()).enqueue(new Callback<obj_serverresponse>() {
             @Override
             public void onResponse(Call<obj_serverresponse> call, Response<obj_serverresponse> response) {
                 Log.d("mytag","[post streaminginfo]response body"+response.body().toString());
@@ -980,5 +960,14 @@ public void startfacetrack(){
         super.onStop();
         unregisterReceiver(networkreceiver);
         client.closesocket();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        if(lay_chat_pub.getVisibility()==View.VISIBLE){
+            lay_chat_pub.setVisibility(View.GONE);
+            lay_btn_pub.setVisibility(View.VISIBLE);
+        }
     }
 }

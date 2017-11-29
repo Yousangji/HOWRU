@@ -39,6 +39,28 @@ public class main_fr_home extends Fragment{
     private adt_card_room adapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private List<obj_room> obj_roomList;
+    private String category;
+
+
+    public static Fragment newInstance(String param1) {
+        main_fr_home fragment = new main_fr_home();
+        Bundle args = new Bundle();
+        args.putString("category", param1);
+        fragment.setArguments(args);
+
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if(getArguments()!=null) {
+            category = getArguments().getString("category");
+            Log.d("mytag","[mainfrhome]category"+category);
+        }else{
+            Log.d("mytag","[mainfrhome] argument null");
+        }
+    }
 
     @Nullable
     @Override
@@ -74,8 +96,9 @@ public class main_fr_home extends Fragment{
     }
 
     public void getstreamlist(){
+
         //Stream list
-        roomapi.getRetrofit(getContext()).get(0).enqueue(new Callback<List<obj_room>>() {
+        roomapi.getRetrofit(getContext()).get(0,category).enqueue(new Callback<List<obj_room>>() {
             @Override
             public void onResponse(Call<List<obj_room>> call, Response<List<obj_room>> response) {
                 Log.d("mytag","response: "+response.toString());

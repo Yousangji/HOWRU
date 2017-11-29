@@ -5,7 +5,10 @@
                 android:layout_height="fill_parent">
 
 
-
+    <com.example.yousangji.howru.View.GraphicOverlay
+        android:id="@+id/faceOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <com.example.yousangji.howru.View.customcameraview
         android:layout_width="match_parent"
@@ -18,33 +21,114 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 
-    <com.example.yousangji.howru.View.GraphicOverlay
-        android:id="@+id/faceOverlay"
+    <LinearLayout
+        android:id="@+id/lay_btn_pub"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="40dp"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        >
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/switching"
+        android:tint="#95ffffff"
+        android:id="@+id/swCam"
+        android:layout_marginEnd="150dp"
+        android:layout_margin="5dp"
+        />
+
+    <Button
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="@drawable/record"
+        android:backgroundTint="#80ff0000"
+        android:id="@+id/record"
+        android:alpha="80"
+        android:text="record"
+        android:layout_margin="3dp"
+        android:textColor="#00000000"
+
+        />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="soft encoder"
+        android:id="@+id/swEnc"
+        android:tint="#95ffffff"
+        android:src="@drawable/favorite"
+        android:layout_margin="5dp"/>
+
+    <ImageButton
+        android:id="@+id/btn_chat_pub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/chat"
+        android:background="#00000000"
+        android:tint="#95ffffff"
+        android:layout_margin="5dp"
+        />
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/face"
+        android:background="#00000000"
+        android:tint="#95ffffff"
+        android:layout_margin="5dp"
+        android:id="@+id/btn_facetracker"/>
+
+    <ImageButton
+        android:id="@+id/btn_filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:src="@drawable/filter"
+        android:background="#00000000"
+        android:tint="#95ffffff"
+       />
+
+    </LinearLayout>
+
+
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="90dp"
-        android:padding="8dp">
+        android:layout_height="80dp"
+        android:padding="8dp"
+        android:background="#40000000">
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/public"/>
+            android:src="@drawable/world"
+            android:tint="#ffffffff"
+            android:id="@+id/img_public_pub"/>
 
         <Spinner
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/spinner_pub"/>
+            android:layout_width="100dp"
+            android:layout_height="30dp"
+            android:id="@+id/spinner_open_pub"
+            android:layout_toRightOf="@id/img_public_pub"
+            android:tooltipText="공개 범위를 선택해주세요"
+            />
 
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/title"
-            android:hint="title"
-            android:layout_toRightOf="@id/img_pub_cover"
+            android:hint="제목을 입력해주세요"
+            android:textColor="#ffffffff"
+            android:layout_toRightOf="@id/spinner_open_pub"
             android:layout_marginEnd="10dp"
             />
+
+        <Spinner
+            android:id="@+id/spinner_category_pub"
+            android:layout_width="120dp"
+            android:layout_height="30dp"
+            android:layout_below="@id/img_public_pub"
+            android:layout_alignRight="@id/spinner_open_pub"/>
 
 
 
@@ -62,40 +146,30 @@
         android:layout_centerHorizontal="true"
         android:background="@color/colorAccent"/>
 
-
-
-
-
-
-
-
-    <LinearLayout
-        android:id="@+id/lay_chat_pub"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recy_chat_pub"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="160dp"
+        android:listSelector="#00000000"
+        android:cacheColorHint="#00000000"
+        android:divider="#000000"
+        android:transcriptMode="alwaysScroll"
         android:layout_gravity="bottom"
-        android:orientation="vertical"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="50dp"
-        android:visibility="gone">
+        android:layout_marginBottom="50dp"/>
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recy_chat_pub"
-            android:layout_width="match_parent"
-            android:layout_height="160dp"
-            android:listSelector="#00000000"
-            android:cacheColorHint="#00000000"
-            android:divider="#000000"
-            android:transcriptMode="alwaysScroll"
-            android:layout_gravity="bottom"/>
+
 
 
 
         <LinearLayout
+            android:id="@+id/lay_chat_pub"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:orientation="horizontal"
             android:layout_gravity="bottom"
+            android:layout_alignParentBottom="true"
+            android:visibility="gone"
             >
 
             <ImageView
@@ -124,88 +198,14 @@
                 android:src="@drawable/done"/>
         </LinearLayout>
 
-    </LinearLayout>
 
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/switching"
-        android:tint="#95ffffff"
-        android:id="@+id/swCam"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginEnd="150dp"
-        android:layout_margin="5dp"
-        />
-
-    <Button
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:background="@drawable/record"
-        android:backgroundTint="#80ff0000"
-        android:id="@+id/record"
-        android:layout_alignParentBottom="true"
-        android:layout_toLeftOf="@+id/swCam"
-        android:layout_margin="5dp"
-        android:alpha="80"
-        android:text="record"
-        android:textColor="#00000000"
-
-        />
-
-
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="soft encoder"
-        android:id="@+id/swEnc"
-        android:tint="#95ffffff"
-        android:layout_alignParentBottom="true"
-        android:src="@drawable/favorite"
-        android:layout_toLeftOf="@+id/record"
-        android:layout_margin="5dp"/>
-
-    <ImageButton
-        android:id="@+id/btn_chat_pub"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/chat"
-        android:background="#00000000"
-        android:tint="#95ffffff"
-        android:layout_alignParentBottom="true"
-        android:layout_toLeftOf="@id/swEnc"
-        android:layout_margin="5dp"
-        />
-    <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/face"
-        android:background="#00000000"
-        android:tint="#95ffffff"
-        android:layout_toLeftOf="@id/btn_chat_pub"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="5dp"
-        android:id="@+id/btn_facetracker"
-        />
-
-    <ImageButton
-        android:id="@+id/btn_filter"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:src="@drawable/filter"
-        android:background="#00000000"
-        android:tint="#95ffffff"
-        android:layout_alignParentBottom="true"
-        android:layout_toLeftOf="@id/btn_facetracker"/>
 
     <android.support.v7.widget.RecyclerView
+        android:id="@+id/recy_thumbnail"
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:orientation="horizontal"
         android:clipToPadding="false"
-        android:id="@+id/recy_thumbnail"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="10dp"
         android:visibility="gone"/>

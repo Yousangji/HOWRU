@@ -17,6 +17,12 @@ import com.example.yousangji.howru.R;
  */
 
 public class main_fr_home_container extends Fragment{
+    Fragment fr_1;
+    Fragment fr_2;
+    Fragment fr_3;
+    Fragment fr_4;
+    Fragment fr_5;
+    Fragment fr_6;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -43,11 +49,22 @@ public class main_fr_home_container extends Fragment{
     // Add Fragments to Tabs
     private void setupViewPager(ViewPager viewPager) {
         adt_frpager_main adapter = new adt_frpager_main(getChildFragmentManager());
-        adapter.addFragment(new main_fr_group(), "follower");
-        adapter.addFragment(new main_fr_home(), "home");
-        adapter.addFragment(new main_fr_home(), "놀방");
-        adapter.addFragment(new main_fr_home(), "술방");
-        adapter.addFragment(new main_fr_home(), "먹방");
+
+
+        fr_1=main_fr_home.newInstance("수다방");
+        fr_2=main_fr_home.newInstance("먹방");
+        fr_3=main_fr_home.newInstance("액팅방");
+        fr_4=main_fr_home.newInstance("공방");
+        fr_5=main_fr_home.newInstance("놀방");
+        fr_6=main_fr_home.newInstance("기타");
+
+
+        adapter.addFragment(fr_1, "수다방");
+        adapter.addFragment(fr_2, "먹방");
+        adapter.addFragment(fr_3, "액팅방");
+        adapter.addFragment(fr_4, "공방");
+        adapter.addFragment(fr_5, "놀방");
+        adapter.addFragment(fr_6, "기타");
         viewPager.setAdapter(adapter);
     }
 

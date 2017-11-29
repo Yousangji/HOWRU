@@ -48,6 +48,7 @@ public class main_fr_group extends Fragment {
     TextView txt_none;
     SwipeRefreshLayout lay_swpref;
     SwipeRefreshLayout.OnRefreshListener onRefreshListene;
+    String category;
 
     private static final boolean SHOW_LOGS = Config.SHOW_LOGS;
     private static final String TAG = main_fr_group.class.getSimpleName();
@@ -86,7 +87,7 @@ public class main_fr_group extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
+        category=getArguments().getString("category");
         getstreamlist();
 
         View rootView = inflater.inflate(R.layout.lay_fr_group, container, false);
@@ -195,7 +196,7 @@ public class main_fr_group extends Fragment {
     public void getstreamlist(){
 
         //Stream list
-        roomapi.getRetrofit(getContext()).get(0).enqueue(new Callback<List<obj_room>>() {
+        roomapi.getRetrofit(getContext()).get(0,category).enqueue(new Callback<List<obj_room>>() {
             @Override
             public void onResponse(Call<List<obj_room>> call, Response<List<obj_room>> response) {
                 //네트워크 통신 완료

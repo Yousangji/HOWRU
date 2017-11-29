@@ -2,6 +2,7 @@ package com.example.yousangji.howru.View;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.example.yousangji.howru.Controller.api_sign;
 import com.example.yousangji.howru.Model.obj_user;
@@ -65,6 +67,7 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
     ImageView btn_login_faceb;
     ImageView btn_login_google;
     ImageView btn_login_kakao;
+    VideoView videoView_background;
     Button btn_logout;
     //dialog_email
     Dialog d;
@@ -82,12 +85,16 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.lay_login_sns);
-
+        videoView_background=(VideoView)findViewById(R.id.videoview_login);
         btn_login_email=(ImageView)findViewById(R.id.btn_login_email);
         btn_login_faceb=(ImageView)findViewById(R.id.btn_login_facebook);
         btn_login_google=(ImageView)findViewById(R.id.btn_login_google);
         btn_logout=(Button)findViewById(R.id.btn_logout);
 
+        ///Video background
+        Uri uri=Uri.parse("android.resource://"+getPackageName()+"/"+R.raw.explore);
+        videoView_background.setVideoURI(uri);
+        videoView_background.start();
         //TODO:로그인 상태 확인, fcm 정보 전달
         //shared
         util_sharedpref.createInstance(getApplicationContext());

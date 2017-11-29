@@ -36,6 +36,8 @@ public class roomapi extends obj_retrofit {
          * @param title
          * @param Streamerid
          * @param Streamernick
+         * @param category
+          * @param privacy
 
          * @return
          */
@@ -46,7 +48,9 @@ public class roomapi extends obj_retrofit {
                 @Field("rmid") String rmid,
                 @Field("rmtitle") String title,
                 @Field("streamerid") String Streamerid,
-                @Field("streamernick") String Streamernick
+                @Field("streamernick") String Streamernick,
+                @Field("category") String category,
+                @Field("privacy") String privacy
 
         );
 
@@ -54,13 +58,15 @@ public class roomapi extends obj_retrofit {
          * 회원가입 메소드
          *
          * @param onair
+         * @param category
 
          * @return
          */
         @FormUrlEncoded
         @POST(api_url.GET_STREAM_LIST)
         Call<List<obj_room>> get(
-                @Field("onair") int onair
+                @Field("onair") int onair,
+                @Field("onair") String category
 
         );
 
