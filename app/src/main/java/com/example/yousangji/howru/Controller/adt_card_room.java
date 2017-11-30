@@ -20,6 +20,8 @@ import com.google.gson.GsonBuilder;
 
 import java.util.List;
 
+import jp.wasabeef.glide.transformations.CropCircleTransformation;
+
 /**
  * Created by YouSangJi on 2017-10-24.
  */
@@ -31,7 +33,7 @@ public class adt_card_room extends RecyclerView.Adapter<adt_card_room.cardviewho
 
     public class cardviewholder extends RecyclerView.ViewHolder {
         public TextView title, count, nickname;
-        public ImageView thumbnail, onair;
+        public ImageView thumbnail, onair,profile;
 
         public cardviewholder(View view) {
             super(view);
@@ -40,6 +42,9 @@ public class adt_card_room extends RecyclerView.Adapter<adt_card_room.cardviewho
             count = (TextView) view.findViewById(R.id.card_count);
             thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
             onair=(ImageView)view.findViewById(R.id.onair);
+            profile=(ImageView)view.findViewById(R.id.img_profile_home);
+
+
 
         }
     }
@@ -78,6 +83,14 @@ public class adt_card_room extends RecyclerView.Adapter<adt_card_room.cardviewho
                 .placeholder(R.drawable.back)
                 .error(R.drawable.back)
                 .into(holder.thumbnail);
+
+
+        Glide
+                .with(mContext)
+                .load(api_url.API_BASE_URL+"users/profile/"+rmobj.getProfileurl())
+                .bitmapTransform(new CropCircleTransformation(mContext)).override(30,30)
+                .into(holder.profile);
+
 
         Log.d("mytag","adt_card_room: imageurl"+api_url.API_BASE_URL+rmobj.getThumnailurl());
 

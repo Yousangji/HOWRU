@@ -162,7 +162,9 @@ public class thr_nettycli extends Thread{
     }
 
     public void closesocket(){
-        f.channel().close();
+        if(!f.channel().isOpen()) {
+            f.channel().close();
+        }
     }
 
 

@@ -3,9 +3,9 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent">
-<android.support.v4.view.ViewPager
+<com.example.yousangji.howru.View.samplepager
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/sampleviewpager">
-</android.support.v4.view.ViewPager>
+</com.example.yousangji.howru.View.samplepager>
 </LinearLayout>

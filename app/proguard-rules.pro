@@ -26,3 +26,5 @@
 
 -keep class net.ossrs.yasea.**{*;}
 -keep class net.ossrs.yasea.SrsEncoder{*;}
+-keep class com.lsjwzh.widget.recyclerviewpager.**
+-dontwarn com.lsjwzh.widget.recyclerviewpager.**

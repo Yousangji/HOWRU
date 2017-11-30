@@ -23,6 +23,7 @@ public class main_container extends AppCompatActivity{
     private main_fr_follow fr_follow;
     private main_fr_setting fr_setting;
     private main_fr_home_container fr_home_container;
+    private sampleactivity sampleact;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -36,6 +37,7 @@ public class main_container extends AppCompatActivity{
         fr_follow=new main_fr_follow();
         fr_home_container=new main_fr_home_container();
         fr_setting=new main_fr_setting();
+        sampleact=new sampleactivity();
         initfragment();
 
         BottomBar bottomBar = (BottomBar)
@@ -53,7 +55,7 @@ public class main_container extends AppCompatActivity{
                         .commit();
                         break;
                     case R.id.menu_noti:
-                        transaction.replace(R.id.contentContainer,fr_mainnoti).commit();
+                        transaction.replace(R.id.contentContainer,sampleact).commit();
                         break;
                     case R.id.menu_shot:
                         Intent toshot =new Intent(getApplicationContext(),broadcaster.class);

@@ -194,8 +194,6 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
         Log.d("mytag","[list_follow] userid : "+userid);
 
 
-        resolutionTextView = new TextView(this);
-        resolutionTextView = (TextView) findViewById(R.id.resolution_textView);
 
         //set_chat component
         chatmst_list=(RecyclerView) findViewById(R.id.recychatmsg);
@@ -390,7 +388,6 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
     @Override
     public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
         Log.v(TAG, "onVideoSizeChanged ["  + " width: " + width + " height: " + height + "]");
-        resolutionTextView.setText("RES:(WxH):"+width+"X"+height +"\n           "+height+"p");
     }
 
     @Override
@@ -412,7 +409,9 @@ public class viewer extends AppCompatActivity implements VideoRendererEventListe
     protected void onStop() {
         super.onStop();
         unregisterReceiver(networkreceiver);
-        client.closesocket();
+        if(client.isAlive()) {
+            client.closesocket();
+        }
         Log.v(TAG, "onStop()...");
     }
 

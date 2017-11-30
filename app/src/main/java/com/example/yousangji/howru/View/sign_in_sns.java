@@ -1,12 +1,16 @@
 package com.example.yousangji.howru.View;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetDialog;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -92,6 +96,8 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
         btn_logout=(Button)findViewById(R.id.btn_logout);
 
         ///Video background
+
+
         Uri uri=Uri.parse("android.resource://"+getPackageName()+"/"+R.raw.explore);
         videoView_background.setVideoURI(uri);
         videoView_background.start();
@@ -165,8 +171,17 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
         btn_login_google.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent in_signin_google=Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-                startActivityForResult(in_signin_google,rc_signin_google);
+                if(isnetworkavailable()) {
+                    Intent in_signin_google = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+                    startActivityForResult(in_signin_google, rc_signin_google);
+                }else{
+                    AlertDialog.Builder builder = new AlertDialog.Builder(sign_in_sns.this);
+                    builder.setTitle("네트워크 연결");
+                    builder.setCancelable(true);
+                    builder.setMessage("네트워크 연결이 되어있지 않아요. 네트워크 연결 후 다시 실행해주세요");
+                    builder.setPositiveButton("OK", null);
+                    builder.show();
+                }
             }
         });
 
@@ -213,7 +228,7 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
     }
 
     public void onclicklistenerfaceb(View v){
-
+        if(isnetworkavailable()){
         //facebook initialize
         FacebookSdk.sdkInitialize(getApplicationContext());
         cbmng_login_faceb= CallbackManager.Factory.create();
@@ -223,11 +238,11 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
             @Override
             public void onSuccess(final LoginResult loginResult) {
                 GraphRequest request;
-                request=GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+                request = GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
                     @Override
                     public void onCompleted(JSONObject user, GraphResponse response) {
                         if (response.getError() != null) {
-                            Log.e("mytag",response.getError().toString());
+                            Log.e("mytag", response.getError().toString());
                         } else {
                             Log.i("TAG", "user: " + user.toString());
                             Log.i("TAG", "AccessToken: " + loginResult.getAccessToken().getToken());
@@ -236,12 +251,12 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
                                 userid = user.getString("id");
                                 emailadress = user.getString("email");
                                 username = user.getString("name");
-                            }catch (JSONException e){
+                            } catch (JSONException e) {
                                 e.printStackTrace();
                             }
 
                             //TODO: DB등록
-                            retro_signup(userid,emailadress,username);
+                            retro_signup(userid, emailadress, username);
 
                         }
                     }
@@ -265,6 +280,15 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
 
             }
         });
+
+        }else{
+            AlertDialog.Builder builder = new AlertDialog.Builder(sign_in_sns.this);
+            builder.setTitle("네트워크 연결");
+            builder.setCancelable(true);
+            builder.setMessage("네트워크 연결이 되어있지 않아요. 네트워크 연결 후 다시 실행해주세요");
+            builder.setPositiveButton("OK", null);
+            builder.show();
+        }
     }
 
     public void retro_signup(String i,String e,String n){
@@ -318,5 +342,14 @@ public class sign_in_sns extends AppCompatActivity implements GoogleApiClient.On
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.d("mytag","[Google_Signin] onconnection failed");
+    }
+
+    public boolean isnetworkavailable(){
+        ConnectivityManager cm=(ConnectivityManager)getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activenetworkinfo=cm.getActiveNetworkInfo();
+        if(activenetworkinfo==null){
+            return false;
+        }
+        return true;
     }
 }

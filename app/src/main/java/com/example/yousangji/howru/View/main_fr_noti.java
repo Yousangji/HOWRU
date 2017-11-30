@@ -1,11 +1,14 @@
 package com.example.yousangji.howru.View;
 
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -44,14 +47,7 @@ public class main_fr_noti extends Fragment {
     String userid;
     String fcmmsg;
     private SwipeRefreshLayout lay_swpref;
-    Handler hdlr_imcoming=new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-           // super.handleMessage(msg);
-            fcmmsg = msg.getData().getString("msg");
-            retro_getnoti();
-        }
-    };
+
 
     @Nullable
     @Override
@@ -121,4 +117,33 @@ public class main_fr_noti extends Fragment {
             }
         });
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(msgreceiver,new IntentFilter("updateui"));
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        retro_getnoti();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(msgreceiver);
+    }
+
+    private BroadcastReceiver msgreceiver=new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            obj_noti notiobj=new obj_noti();
+            notiobj.setNotimessage(intent.getStringExtra("message"));
+            notiobj.setProfileurl(intent.getStringExtra("profileurl"));
+            notiobj.setUserid(intent.getStringExtra("userid"));
+            notiadt.putnoti(notiobj);
+        }
+    };
 }

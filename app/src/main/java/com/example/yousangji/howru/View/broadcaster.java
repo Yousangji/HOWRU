@@ -440,23 +440,32 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
                     btnRecord.setText("record");
                     btnSwitchEncoder.setEnabled(true);
 
-                    //방 종료 메시지
-                    msgobj=new obj_chatmsg();
-                    msgobj.setMsg_rmnum(rmid);
-                    msgobj.setMsg_userid(userid);
-                    msgobj.setMsg_nickname(usernick);
-                    msgobj.setMsg_profileurl(url_profil);
-                    msgobj.setMsg_state("1");
-                    msgobj.setMsg_content(usernick+"님이 방을 종료합니다.");
-                    chat_recyadapter.addmsg(msgobj);
-                    chat_recyadapter.notifyDataSetChanged();
-                    str_msgobj=gson.toJson(msgobj);
-                    client.sendMsg(str_msgobj);
+                    if(client.isAlive()) {
+                        //방 종료 메시지전송
+                        msgobj = new obj_chatmsg();
+                        msgobj.setMsg_rmnum(rmid);
+                        msgobj.setMsg_userid(userid);
+                        msgobj.setMsg_nickname(usernick);
+                        msgobj.setMsg_profileurl(url_profil);
+                        msgobj.setMsg_state("1");
+                        msgobj.setMsg_content(usernick + "님이 방을 종료합니다.");
+                        chat_recyadapter.addmsg(msgobj);
+                        chat_recyadapter.notifyDataSetChanged();
+                        str_msgobj = gson.toJson(msgobj);
+                        client.sendMsg(str_msgobj);
+                    }
+
+                    //녹화한 파일 전송
+                    if(!btnRecord.getText().toString().contentEquals("record")){
+                        postvideo(recPath,rmid);
+                        Log.d("mytag","[broadcaster]postvideo");
+                    }
                 }
             }
         });
 
         btnSwitchCamera.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
                 mPublisher.switchCameraFace((mPublisher.getCamraId() + 1) % Camera.getNumberOfCameras());
@@ -466,8 +475,6 @@ public class broadcaster extends AppCompatActivity implements RtmpHandler.RtmpLi
         btnRecord.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
                 if (btnRecord.getText().toString().contentEquals("record")) {
                     if (mPublisher.startRecord(recPath)) {
                         btnRecord.setText("pause");
@@ -959,15 +966,19 @@ public void startfacetrack(){
     protected void onStop() {
         super.onStop();
         unregisterReceiver(networkreceiver);
-        client.closesocket();
+        if(client!=null) {
+            client.closesocket();
+        }
     }
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
+
         if(lay_chat_pub.getVisibility()==View.VISIBLE){
             lay_chat_pub.setVisibility(View.GONE);
             lay_btn_pub.setVisibility(View.VISIBLE);
+        }else{
+            super.onBackPressed();
         }
     }
 }

@@ -1,27 +1,83 @@
 package com.example.yousangji.howru.View;
 
-import android.os.Bundle;
-import android.os.PersistableBundle;
-import android.support.annotation.Nullable;
+import android.content.Context;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
-
-import com.example.yousangji.howru.R;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.View;
 
 /**
  * Created by YouSangJi on 2017-11-29.
  */
 
-public class samplepager extends AppCompatActivity {
+public class samplepager extends ViewPager {
+    public samplepager(Context context) {
+        super(context);
+        init();
+    }
 
-ViewPager viewPager;
+    public samplepager(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    private void init() {
+        // The majority of the magic happens here
+        setPageTransformer(true, new VerticalPageTransformer());
+        // The easiest way to get rid of the overscroll drawing that happens on the left and right
+        setOverScrollMode(OVER_SCROLL_NEVER);
+    }
+
+    private class VerticalPageTransformer implements ViewPager.PageTransformer {
+
+        @Override
+        public void transformPage(View view, float position) {
+
+            if (position < -1) { // [-Infinity,-1)
+                // This page is way off-screen to the left.
+                view.setAlpha(0);
+
+            } else if (position <= 1) { // [-1,1]
+                view.setAlpha(1);
+
+                // Counteract the default slide transition
+                view.setTranslationX(view.getWidth() * -position);
+
+                //set Y position to swipe in from top
+                float yPosition = position * view.getHeight();
+                view.setTranslationY(yPosition);
+
+            } else { // (1,+Infinity]
+                // This page is way off-screen to the right.
+                view.setAlpha(0);
+            }
+        }
+    }
+
+    /**
+     * Swaps the X and Y coordinates of your touch event.
+     */
+    private MotionEvent swapXY(MotionEvent ev) {
+        float width = getWidth();
+        float height = getHeight();
+
+        float newX = (ev.getY() / height) * width;
+        float newY = (ev.getX() / width) * height;
+
+        ev.setLocation(newX, newY);
+
+        return ev;
+    }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
-        super.onCreate(savedInstanceState, persistentState);
-        setContentView(R.layout.samplepager);
+    public boolean onInterceptTouchEvent(MotionEvent ev){
+        boolean intercepted = super.onInterceptTouchEvent(swapXY(ev));
+        swapXY(ev); // return touch coordinates to original reference frame for any child views
+        return intercepted;
+    }
 
-        viewPager=(ViewPager)findViewById(R.id.sampleviewpager);
-
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        return super.onTouchEvent(swapXY(ev));
     }
 }
